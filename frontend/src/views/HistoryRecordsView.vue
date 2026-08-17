@@ -1,5 +1,7 @@
 <script setup>
 import { inject, onMounted, onUnmounted } from "vue";
+import GkHeader from "../components/GkHeader.vue";
+import GkSidePanel from "../components/GkSidePanel.vue";
 import HistoryView from "../components/HistoryView.vue";
 import RecommendationResult from "../components/RecommendationResult.vue";
 import { formatDateTime, queryTypeLabel } from "../utils/recommendation";
@@ -21,8 +23,18 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <el-main class="app-main">
-    <HistoryView :records="historyRecords" :loading="historyLoading" @refresh="loadHistory" @view="openHistoryResult" @delete="deleteHistoryRecord" />
+  <div class="gk-page">
+    <GkHeader active="" />
+
+    <main class="gk-home__container gk-page__main">
+      <div class="gk-page__body">
+        <section class="gk-page__content">
+          <HistoryView :records="historyRecords" :loading="historyLoading" @refresh="loadHistory" @view="openHistoryResult" @delete="deleteHistoryRecord" />
+        </section>
+
+        <GkSidePanel />
+      </div>
+    </main>
 
     <el-dialog v-model="historyDialogVisible" title="历史结果" width="80%" top="4vh" destroy-on-close>
       <el-skeleton :loading="historyDetailLoading" animated>
@@ -47,5 +59,5 @@ onUnmounted(() => {
         </template>
       </el-skeleton>
     </el-dialog>
-  </el-main>
+  </div>
 </template>

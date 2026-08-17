@@ -1,7 +1,8 @@
 <script setup>
 import { ElMessage } from "element-plus";
-import { Document, InfoFilled, Monitor, Promotion, School, User } from "@element-plus/icons-vue";
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { ArrowRight, CaretBottom, CaretTop, Collection, CopyDocument, Document, Expand, Fold, Monitor, Plus, Promotion, Refresh, RefreshRight, School, Search, SwitchButton, TrendCharts, User, VideoPause } from "@element-plus/icons-vue";
+import { computed, inject, nextTick, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import {
   buildGroupedFromResult,
   buildPlanItemKey,
@@ -9,6 +10,7 @@ import {
   normalizeItem
 } from "../utils/recommendation";
 import { UI_TEXT, createHttpError, normalizeUserError } from "../utils/ui";
+import XiaoZhiAvatar from "./XiaoZhiAvatar.vue";
 
 const props = defineProps({
   token: { type: String, required: true },
@@ -16,6 +18,12 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["jump-to-plans"]);
+
+const route = useRoute();
+const router = useRouter();
+const workspace = inject("workspace", null);
+const sideCollapsed = ref(false);
+
 const conversationsLoading = ref(false);
 const conversationLoading = ref(false);
 const sending = ref(false);
@@ -25,6 +33,7 @@ const activeConversationId = ref(null);
 const messages = ref([]);
 const draft = ref("");
 const messageListRef = ref(null);
+const planDrawerVisible = ref(false);
 
 const plansLoading = ref(false);
 const plans = ref([]);
@@ -39,18 +48,132 @@ const pendingAddItem = ref(null);
 const createPlanDialogVisible = ref(false);
 const createPlanName = ref("");
 
-const quickPrompts = [
+const QUICK_PROMPTS = [
   { label: "帮我看看我的画像信息", icon: User },
   { label: "看看我当前的志愿方案", icon: Document },
   { label: "帮我推荐学校", icon: School },
   { label: "帮我推荐计算机专业", icon: Monitor }
 ];
 
+const NAV_PILLS = [
+  { label: "查大学", icon: School, to: "/schools" },
+  { label: "查专业", icon: Monitor, to: "/majors" },
+  { label: "院校排行", icon: TrendCharts, to: "/rank" },
+  { label: "一分一段", icon: Search, to: "/segments" },
+  { label: "招生计划", icon: Document, to: "/enroll" }
+];
+
+const TOOL_CARDS = [
+  { label: "智能推荐", desc: "冲稳保方案", ask: "帮我基于分数、位次和选科，生成冲稳保梯度志愿方案", icon: Promotion, theme: "orange" },
+  { label: "智能选大学", desc: "按分匹配", to: "/choose", icon: Search, theme: "blue" },
+  { label: "志愿填报", desc: "大数据看板", to: "/volunteer", icon: TrendCharts, theme: "purple" },
+  { label: "我的志愿表", desc: "方案管理", to: "/plans", icon: Collection, theme: "green" },
+  { label: "历史记录", desc: "对话回顾", to: "/history", icon: Refresh, theme: "cyan" }
+];
+
+const QUESTION_POOL = [
+  "广东丨物化生丨550分能上哪些大学？",
+  "帮我看看我的画像信息",
+  "看看我当前的志愿方案",
+  "帮我推荐计算机专业",
+  "帮我分析当前方案的冲稳保比例",
+  "湖南物理类600分适合冲哪些学校？",
+  "推荐几所省内就业前景好的大学",
+  "我的位次能报什么层次的学校？"
+];
+const quickQuestions = ref(QUESTION_POOL.slice(0, 4));
+
+const TOOL_LABELS = {
+  getUserProfile: "已读取用户画像",
+  getCurrentPlan: "已读取当前志愿表",
+  recommendSchools: "已生成院校推荐",
+  recommendMajors: "已生成专业推荐",
+  addPlanItem: "已将志愿加入志愿表",
+  removePlanItem: "已从志愿表移除",
+  savePlan: "已保存志愿表"
+};
+
 const conversationTitle = computed(() =>
   conversations.value.find((item) => item.id === activeConversationId.value)?.title || "新的志愿对话"
 );
 const activePlan = computed(() => plans.value.find((item) => String(item.id) === String(activePlanId.value)) || null);
 const canSend = computed(() => !!draft.value.trim() && !sending.value && !!activePlanId.value);
+const userAvatarText = computed(() => String(props.user?.username || props.user?.phone || "用").slice(0, 1));
+
+const groups = computed(() => {
+  const result = [];
+  let current = null;
+  for (const message of messages.value) {
+    if (message.role === "user") {
+      current = { user: message, assistant: [], tools: [] };
+      result.push(current);
+    } else if (current) {
+      if (["tool_call", "tool_result"].includes(message.messageType)) current.tools.push(message);
+      else current.assistant.push(message);
+    } else {
+      current = { user: null, assistant: [message], tools: [] };
+      result.push(current);
+    }
+  }
+  return result;
+});
+
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function renderMarkdown(text) {
+  if (!text) return "";
+  const lines = escapeHtml(text).split(/\r?\n/);
+  let html = "";
+  let listTag = "";
+  const closeList = () => {
+    if (listTag) {
+      html += `</${listTag}>`;
+      listTag = "";
+    }
+  };
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (/^#{1,3}\s+/.test(trimmed)) {
+      closeList();
+      html += `<div class="gk-md-h">${trimmed.replace(/^#{1,3}\s+/, "")}</div>`;
+    } else if (/^[-•*]\s+/.test(trimmed)) {
+      if (listTag !== "ul") {
+        closeList();
+        html += "<ul>";
+        listTag = "ul";
+      }
+      html += `<li>${trimmed.replace(/^[-•*]\s+/, "")}</li>`;
+    } else if (/^\d+[.、)]\s+/.test(trimmed)) {
+      if (listTag !== "ol") {
+        closeList();
+        html += "<ol>";
+        listTag = "ol";
+      }
+      html += `<li>${trimmed.replace(/^\d+[.、)]\s+/, "")}</li>`;
+    } else if (!trimmed) {
+      closeList();
+    } else {
+      closeList();
+      html += `<p>${line}</p>`;
+    }
+  });
+  closeList();
+  return html
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+
+function refreshQuestions() {
+  const current = quickQuestions.value.map((question) => QUESTION_POOL.indexOf(question));
+  quickQuestions.value = current.map((index) => QUESTION_POOL[(index + 1) % QUESTION_POOL.length]);
+}
 
 function getAuthHeaders(extraHeaders) {
   return { ...(extraHeaders || {}), Authorization: `Bearer ${props.token}` };
@@ -224,6 +347,7 @@ async function createConversation(title = "新的志愿对话") {
     });
     activeConversationId.value = detail.id;
     messages.value = Array.isArray(detail.messages) ? detail.messages : [];
+    draft.value = "";
     await loadConversations();
   } catch (ex) {
     ElMessage.error(resolveErrorMessage(ex, "创建对话失败"));
@@ -251,6 +375,44 @@ async function scrollMessagesToBottom() {
   if (messageListRef.value) messageListRef.value.scrollTop = messageListRef.value.scrollHeight;
 }
 
+const abortRef = ref(null);
+const stopRequested = ref(false);
+const streamingStarted = ref(false);
+const expandedAnswerIds = ref(new Set());
+const answerFeedback = ref({});
+let liveMessage = null;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function ensureLiveMessage() {
+  if (!liveMessage) {
+    messages.value.push({
+      id: `stream-${Date.now()}`,
+      role: "assistant",
+      messageType: "text",
+      content: "",
+      createdAt: new Date().toISOString(),
+      streaming: true
+    });
+    liveMessage = messages.value[messages.value.length - 1];
+  }
+  return liveMessage;
+}
+
+function finalizeLiveMessage(content) {
+  if (!liveMessage) return;
+  if (content != null) liveMessage.content = content;
+  liveMessage.streaming = false;
+  liveMessage = null;
+}
+
+function stopGeneration() {
+  stopRequested.value = true;
+  if (abortRef.value) abortRef.value.abort();
+}
+
 async function sendMessage(content = draft.value) {
   const text = String(content || "").trim();
   if (!text || sending.value) return;
@@ -266,27 +428,178 @@ async function sendMessage(content = draft.value) {
   messages.value.push(optimistic);
   draft.value = "";
   sending.value = true;
+  stopRequested.value = false;
+  streamingStarted.value = false;
+  liveMessage = null;
   await scrollMessagesToBottom();
+  let usedWriteTool = false;
   try {
-    const turn = await apiFetch(`/api/agent/conversations/${activeConversationId.value}/messages`, {
-      method: "POST",
-      headers: getAuthHeaders({ "Content-Type": "application/json" }),
-      body: JSON.stringify({ content: text, planId: Number(activePlanId.value) }),
-      timeoutMs: 25000
-    });
-    messages.value.push(...(Array.isArray(turn.generatedMessages) ? turn.generatedMessages : []));
-    if ((turn.generatedMessages || []).some((message) => ["addPlanItem", "removePlanItem", "savePlan"].includes(message.toolName))) {
+    const streamResult = await runStreamTurn(text);
+    if (streamResult.streamed) {
+      usedWriteTool = streamResult.usedWriteTool;
+    } else {
+      usedWriteTool = await runLegacyTurn(text);
+    }
+  } catch (ex) {
+    if (ex?.name === "AbortError" || stopRequested.value) {
+      finalizeLiveMessage();
+    } else {
+      messages.value = messages.value.filter((item) => item.id !== optimistic.id);
+      ElMessage.error(resolveErrorMessage(ex, "发送消息失败"));
+    }
+  } finally {
+    finalizeLiveMessage();
+    sending.value = false;
+    abortRef.value = null;
+    if (usedWriteTool) {
       await loadPlans(activePlanId.value);
       await loadActivePlan();
     }
     await loadConversations();
     await scrollMessagesToBottom();
-  } catch (ex) {
-    messages.value = messages.value.filter((item) => item.id !== optimistic.id);
-    ElMessage.error(resolveErrorMessage(ex, "发送消息失败"));
-  } finally {
-    sending.value = false;
   }
+}
+
+async function runStreamTurn(text) {
+  const controller = new AbortController();
+  abortRef.value = controller;
+  let response;
+  try {
+    response = await fetch(`/api/agent/conversations/${activeConversationId.value}/stream`, {
+      method: "POST",
+      headers: getAuthHeaders({ "Content-Type": "application/json", Accept: "text/event-stream" }),
+      body: JSON.stringify({ content: text, planId: Number(activePlanId.value) }),
+      signal: controller.signal
+    });
+  } catch (ex) {
+    if (ex?.name === "AbortError") throw ex;
+    return { streamed: false };
+  }
+  if (!response.ok) return { streamed: false };
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("text/event-stream")) return { streamed: false };
+
+  let usedWriteTool = false;
+  const WRITE_TOOLS = ["addPlanItem", "removePlanItem", "savePlan"];
+  const pushEventMessage = (message) => {
+    messages.value.push({
+      id: `evt-${Date.now()}-${messages.value.length}`,
+      createdAt: new Date().toISOString(),
+      ...message
+    });
+    if (WRITE_TOOLS.includes(message.toolName)) usedWriteTool = true;
+  };
+
+  const handleEvent = async (eventName, dataText) => {
+    let data = {};
+    try {
+      data = dataText ? JSON.parse(dataText) : {};
+    } catch {
+      data = {};
+    }
+    if (eventName === "tool_call") {
+      pushEventMessage({ role: "assistant", messageType: "tool_call", toolName: data.toolName, content: data.content || "" });
+      streamingStarted.value = true;
+      await scrollMessagesToBottom();
+    } else if (eventName === "tool_result") {
+      pushEventMessage({ role: "assistant", messageType: "tool_result", toolName: data.toolName, content: data.content || "", payload: data.payload });
+      streamingStarted.value = true;
+      await scrollMessagesToBottom();
+    } else if (eventName === "delta") {
+      const target = ensureLiveMessage();
+      target.content += data.text || "";
+      streamingStarted.value = true;
+      await scrollMessagesToBottom();
+    } else if (eventName === "message") {
+      const message = data.message;
+      if (!message || message.role === "user") return;
+      if (message.messageType === "text") {
+        const target = ensureLiveMessage();
+        target.content = message.content || target.content;
+        if (WRITE_TOOLS.includes(message.toolName)) usedWriteTool = true;
+      } else {
+        pushEventMessage(message);
+      }
+      await scrollMessagesToBottom();
+    } else if (eventName === "error") {
+      ElMessage.warning(data.message || "AI 服务波动，已切换备用回答");
+    }
+  };
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let separatorIndex;
+    while ((separatorIndex = buffer.indexOf("\n\n")) >= 0) {
+      const block = buffer.slice(0, separatorIndex);
+      buffer = buffer.slice(separatorIndex + 2);
+      let eventName = "message";
+      let dataText = "";
+      block.split("\n").forEach((line) => {
+        if (line.startsWith("event:")) eventName = line.slice(6).trim();
+        else if (line.startsWith("data:")) dataText += line.slice(5).trim();
+      });
+      await handleEvent(eventName, dataText);
+    }
+  }
+  return { streamed: true, usedWriteTool };
+}
+
+function revealTextProgressively(fullText) {
+  return new Promise((resolve) => {
+    const target = ensureLiveMessage();
+    const step = () => {
+      if (stopRequested.value) {
+        target.content = fullText;
+        resolve();
+        return;
+      }
+      const remaining = fullText.length - target.content.length;
+      if (remaining <= 0) {
+        resolve();
+        return;
+      }
+      const size = remaining > 400 ? 6 + Math.floor(Math.random() * 5) : 2 + Math.floor(Math.random() * 4);
+      target.content = fullText.slice(0, target.content.length + size);
+      scrollMessagesToBottom();
+      setTimeout(step, remaining > 400 ? 14 : 22);
+    };
+    step();
+  });
+}
+
+async function runLegacyTurn(text) {
+  const turn = await apiFetch(`/api/agent/conversations/${activeConversationId.value}/messages`, {
+    method: "POST",
+    headers: getAuthHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ content: text, planId: Number(activePlanId.value) }),
+    timeoutMs: 25000
+  });
+  const generated = Array.isArray(turn.generatedMessages) ? turn.generatedMessages : [];
+  let usedWriteTool = false;
+  for (const message of generated) {
+    if (["addPlanItem", "removePlanItem", "savePlan"].includes(message.toolName)) usedWriteTool = true;
+    if (stopRequested.value) {
+      messages.value.push(message);
+      continue;
+    }
+    if (["tool_call", "tool_result"].includes(message.messageType)) {
+      await sleep(420);
+      messages.value.push(message);
+      streamingStarted.value = true;
+      await scrollMessagesToBottom();
+    } else {
+      await sleep(280);
+      streamingStarted.value = true;
+      await revealTextProgressively(message.content || "");
+    }
+  }
+  finalizeLiveMessage();
+  return usedWriteTool;
 }
 
 function recommendationCards(message) {
@@ -295,23 +608,71 @@ function recommendationCards(message) {
 function hasProfilePayload(message) { return message?.toolName === "getUserProfile" && !!message?.payload; }
 function hasPlanPayload(message) { return message?.toolName === "getCurrentPlan" && !!message?.payload; }
 function hasErrorPayload(message) { return message?.messageType === "tool_result" && !!message?.payload?.errorCategory; }
-function bubbleClass(message) {
-  if (message.role === "user") return "agent-bubble agent-bubble--user";
-  if (message.messageType === "tool_call") return "agent-bubble agent-bubble--toolcall";
-  if (message.messageType === "tool_result") return "agent-bubble agent-bubble--toolresult";
-  return "agent-bubble agent-bubble--assistant";
+
+function toolChipText(tool) {
+  if (tool.messageType === "tool_call") return `正在调用工具 · ${tool.toolName || "agent"}`;
+  if (hasErrorPayload(tool)) return `${TOOL_LABELS[tool.toolName] || tool.toolName || "工具"} 执行失败`;
+  return TOOL_LABELS[tool.toolName] || tool.toolName || "工具已执行";
 }
-function roleLabel(message) {
-  if (message.role === "user") return "你";
-  if (message.messageType === "tool_call") return "工具调用";
-  if (message.messageType === "tool_result") return "工具结果";
-  return "智愿 AI";
-}
+
 function formatStrategyLabel(value) {
   const text = String(value || "").toUpperCase();
   if (text.includes("RUSH") || text.includes("冲")) return "冲刺";
   if (text.includes("GUARANTEE") || text.includes("保")) return "保底";
   return "稳妥";
+}
+
+function strategyTagType(value) {
+  const label = formatStrategyLabel(value);
+  if (label === "冲刺") return "warning";
+  if (label === "保底") return "info";
+  return "success";
+}
+
+function answerHtml(message) {
+  const html = renderMarkdown(message.content || "");
+  return message.streaming ? `${html}<span class="gk-cursor"></span>` : html;
+}
+
+function isLongAnswer(message) {
+  return (message.content || "").length > 420;
+}
+
+function isCollapsedAnswer(message) {
+  return isLongAnswer(message) && !expandedAnswerIds.value.has(message.id);
+}
+
+function expandAnswer(message) {
+  const next = new Set(expandedAnswerIds.value);
+  if (next.has(message.id)) next.delete(message.id);
+  else next.add(message.id);
+  expandedAnswerIds.value = next;
+}
+
+async function copyAnswer(message) {
+  try {
+    await navigator.clipboard.writeText(message.content || "");
+    ElMessage.success("已复制回答内容");
+  } catch {
+    ElMessage.warning("复制失败，请手动选择文本复制");
+  }
+}
+
+function regenerateAnswer(message) {
+  const index = messages.value.findIndex((item) => item.id === message.id);
+  for (let i = index - 1; i >= 0; i -= 1) {
+    if (messages.value[i].role === "user") {
+      sendMessage(messages.value[i].content);
+      return;
+    }
+  }
+}
+
+function setAnswerFeedback(message, value) {
+  answerFeedback.value = {
+    ...answerFeedback.value,
+    [message.id]: answerFeedback.value[message.id] === value ? "" : value
+  };
 }
 
 function openAddDialog(item) {
@@ -368,158 +729,349 @@ async function confirmAddItem() {
 }
 
 watch(activePlanId, loadActivePlan);
+watch(() => messages.value.length, () => scrollMessagesToBottom());
 onMounted(async () => {
   await Promise.all([loadPlans(), loadConversations()]);
   if (!conversations.value.length) await createConversation();
   await loadActivePlan();
+  const presetQuestion = Array.isArray(route.query.q) ? route.query.q[0] : route.query.q;
+  if (typeof presetQuestion === "string" && presetQuestion.trim() && !draft.value.trim()) {
+    draft.value = presetQuestion.trim();
+  }
 });
 </script>
 
 <template>
-  <section class="agent-page">
-    <div class="agent-workspace">
-      <aside class="agent-rail">
-        <div class="agent-rail__head">
-          <strong>对话会话</strong>
-          <el-button type="primary" plain size="small" :loading="creating" @click="createConversation()">新建</el-button>
+  <section class="xz-chat">
+    <aside class="xz-side" :class="{ 'is-collapsed': sideCollapsed }">
+      <div class="xz-side__head">
+        <div class="xz-side__logo">
+          <XiaoZhiAvatar size="md" />
+          <span v-if="!sideCollapsed" class="xz-side__name">智愿AI报考平台</span>
         </div>
-        <div class="agent-quick-title">快速提问</div>
-        <div class="agent-quick-actions">
-          <button v-for="prompt in quickPrompts" :key="prompt.label" type="button" @click="sendMessage(prompt.label)">
-            <el-icon><component :is="prompt.icon" /></el-icon><span>{{ prompt.label }}</span>
-          </button>
-        </div>
-        <div class="agent-conversation-title">最近对话</div>
-        <div class="agent-conversation-list" v-loading="conversationsLoading">
+        <button v-if="!sideCollapsed" type="button" class="xz-side__fold" title="收起侧栏" @click="sideCollapsed = true">
+          <el-icon><Fold /></el-icon>
+        </button>
+      </div>
+
+      <button
+        type="button"
+        class="xz-side__new"
+        :class="{ 'is-mini': sideCollapsed }"
+        :disabled="creating"
+        :title="sideCollapsed ? '新对话' : ''"
+        @click="createConversation()"
+      >
+        <el-icon><Plus /></el-icon>
+        <span v-if="!sideCollapsed">新对话</span>
+      </button>
+
+      <nav class="xz-side__quick" aria-label="快速提问">
+        <div v-if="!sideCollapsed" class="xz-side__label">快速提问</div>
+        <button
+          v-for="prompt in QUICK_PROMPTS"
+          :key="prompt.label"
+          type="button"
+          class="xz-side__item"
+          :title="sideCollapsed ? prompt.label : ''"
+          @click="sendMessage(prompt.label)"
+        >
+          <el-icon><component :is="prompt.icon" /></el-icon>
+          <span v-if="!sideCollapsed">{{ prompt.label }}</span>
+        </button>
+      </nav>
+
+      <div v-if="!sideCollapsed" class="xz-side__history">
+        <div class="xz-side__label">历史对话</div>
+        <div class="xz-side__history-list" v-loading="conversationsLoading">
           <button
             v-for="item in conversations"
             :key="item.id"
             type="button"
-            :class="['agent-conversation-item', { 'is-active': item.id === activeConversationId }]"
+            :class="['xz-side__hist-item', { 'is-active': item.id === activeConversationId }]"
             @click="openConversation(item.id)"
           >
-            <strong>{{ item.title || "未命名会话" }}</strong>
-            <span>{{ item.messageCount || 0 }} 条消息 · {{ formatDateTime(item.updatedAt || item.createdAt) }}</span>
+            <span class="xz-side__hist-title">{{ item.title || "未命名会话" }}</span>
+            <span class="xz-side__hist-meta">{{ item.messageCount || 0 }} 条 · {{ formatDateTime(item.updatedAt || item.createdAt) }}</span>
           </button>
+          <p v-if="!conversations.length && !conversationsLoading" class="xz-side__hist-empty">暂无历史对话</p>
         </div>
-      </aside>
+      </div>
 
-      <main class="agent-chat-panel">
-        <div class="agent-chat-panel__head">
-          <div>
-            <strong>{{ conversationTitle }}</strong>
-            <div class="agent-operation-plan">
-              <span>当前操作志愿表</span>
-              <el-select v-model="activePlanId" placeholder="请选择志愿表" :loading="plansLoading">
-                <el-option v-for="plan in plans" :key="plan.id" :label="plan.planName" :value="String(plan.id)" />
-              </el-select>
-              <el-tooltip content="AI 的读取、加入和移除操作均作用于这里选择的志愿表" placement="bottom">
-                <el-icon><InfoFilled /></el-icon>
-              </el-tooltip>
+      <div class="xz-side__user">
+        <span class="xz-side__user-avatar">{{ userAvatarText }}</span>
+        <template v-if="!sideCollapsed">
+          <div class="xz-side__user-info">
+            <strong>{{ props.user?.username || "志愿考生" }}</strong>
+            <span>AI 对话工作区</span>
+          </div>
+          <button type="button" class="xz-side__logout" @click="workspace?.logout?.()">
+            <el-icon><SwitchButton /></el-icon>退出
+          </button>
+        </template>
+      </div>
+
+      <button v-if="sideCollapsed" type="button" class="xz-side__unfold" title="展开侧栏" @click="sideCollapsed = false">
+        <el-icon><Expand /></el-icon>
+      </button>
+    </aside>
+
+    <main class="xz-main">
+      <div v-if="!messages.length" class="xz-hero">
+        <div class="xz-hero__inner">
+          <div class="xz-hero__logo">
+            <XiaoZhiAvatar size="hero" float />
+            <div class="xz-hero__title">
+              <em>Hello</em>
+              <strong>我是你的<i>志愿AI咨询师</i>～</strong>
+              <span>✨ 高考志愿，就问小智</span>
             </div>
+          </div>
+
+          <div class="xz-ask">
+            <textarea
+              v-model="draft"
+              rows="3"
+              class="xz-ask__area"
+              maxlength="1000"
+              placeholder="请输入您想咨询的问题，Shift+Enter换行"
+              @keydown.enter.exact.prevent="sendMessage()"
+            ></textarea>
+            <div class="xz-ask__row">
+              <button
+                v-for="pill in NAV_PILLS"
+                :key="pill.label"
+                type="button"
+                class="xz-ask__pill"
+                @click="router.push(pill.to)"
+              >
+                <el-icon><component :is="pill.icon" /></el-icon>{{ pill.label }}
+              </button>
+              <button
+                class="xz-ask__send"
+                :class="{ 'is-stop': sending }"
+                type="button"
+                :disabled="!sending && !canSend"
+                :title="sending ? '停止生成' : '发送'"
+                @click="sending ? stopGeneration() : sendMessage()"
+              >
+                <el-icon><VideoPause v-if="sending" /><Promotion v-else /></el-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="xz-panel xz-qs">
+            <div class="xz-panel__head">
+              <span class="xz-panel__title">你可以这样问：<i>HAVE A TRY</i></span>
+              <button type="button" class="xz-panel__more" @click="refreshQuestions">
+                <el-icon><Refresh /></el-icon>换一批
+              </button>
+            </div>
+            <ul class="xz-qs__list">
+              <li v-for="question in quickQuestions" :key="question" @click="sendMessage(question)">{{ question }}</li>
+            </ul>
+          </div>
+
+          <div class="xz-panel xz-tools">
+            <div class="xz-panel__head">
+              <span class="xz-panel__title">快捷工具</span>
+              <button type="button" class="xz-panel__more" @click="router.push('/')">
+                更多<el-icon><ArrowRight /></el-icon>
+              </button>
+            </div>
+            <div class="xz-tools__list">
+              <button
+                v-for="tool in TOOL_CARDS"
+                :key="tool.label"
+                type="button"
+                class="xz-tool"
+                :class="`xz-tool--${tool.theme}`"
+                @click="tool.ask ? sendMessage(tool.ask) : router.push(tool.to)"
+              >
+                <span class="xz-tool__cover"><el-icon><component :is="tool.icon" /></el-icon></span>
+                <span class="xz-tool__name">{{ tool.label }}</span>
+                <span class="xz-tool__desc">{{ tool.desc }}</span>
+              </button>
+            </div>
+          </div>
+
+          <p class="xz-tip">内容由AI生成，仅供参考使用，不作为决策建议～</p>
+        </div>
+      </div>
+
+      <template v-else>
+        <header class="xz-topbar">
+          <div class="xz-topbar__title">
+            <XiaoZhiAvatar size="sm" />
+            <strong>{{ conversationTitle }}</strong>
+            <span class="xz-topbar__plan">{{ activePlan?.planName || "未选择志愿表" }}</span>
+          </div>
+          <div class="xz-topbar__actions">
+            <el-select v-model="activePlanId" class="xz-plan-select" placeholder="选择志愿表" size="small" :loading="plansLoading">
+              <el-option v-for="plan in plans" :key="plan.id" :label="plan.planName" :value="String(plan.id)" />
+            </el-select>
+            <button type="button" class="xz-topbar__plans" @click="planDrawerVisible = true">
+              <el-icon><Collection /></el-icon>志愿表<span class="xz-topbar__badge">{{ activePlanItems.length }}</span>
+            </button>
+          </div>
+        </header>
+
+        <div ref="messageListRef" class="xz-stream" v-loading="conversationLoading">
+          <div class="xz-stream__inner">
+            <template v-for="(group, gi) in groups" :key="`g-${gi}`">
+              <div class="xz-msg">
+                <div v-if="group.user" class="xz-msg__q">{{ group.user.content }}</div>
+                <div v-if="group.tools.length || group.assistant.length || (sending && gi === groups.length - 1)" class="xz-msg__a">
+                  <div class="xz-msg__card">
+                    <div v-if="group.tools.length" class="gk-tools">
+                      <span
+                        v-for="(tool, ti) in group.tools"
+                        :key="`t-${gi}-${ti}`"
+                        :class="[
+                          'gk-tool-chip',
+                          { 'gk-tool-chip--call': tool.messageType === 'tool_call', 'gk-tool-chip--error': hasErrorPayload(tool) }
+                        ]"
+                      >{{ toolChipText(tool) }}</span>
+                    </div>
+                    <div v-for="(tool, ti) in group.tools" :key="`p-${gi}-${ti}`">
+                      <div v-if="hasProfilePayload(tool)" class="gk-payload gk-payload--profile">
+                        <span>分数<strong>{{ tool.payload.score ?? "-" }}</strong></span>
+                        <span>科类<strong>{{ tool.payload.subjectType || "-" }}</strong></span>
+                        <span>省份<strong>{{ tool.payload.examProvince || "-" }}</strong></span>
+                      </div>
+                      <div v-if="hasPlanPayload(tool)" class="gk-payload gk-payload--plan">
+                        <strong>{{ tool.payload.planName || "当前志愿表" }}</strong>
+                        <span>共 {{ tool.payload.itemCount ?? 0 }} 条志愿</span>
+                      </div>
+                      <div v-if="recommendationCards(tool).length" class="gk-cards">
+                        <article v-for="(item, idx) in recommendationCards(tool)" :key="`c-${gi}-${ti}-${idx}`" class="gk-card">
+                          <div class="gk-card__head">
+                            <div>
+                              <strong>{{ item.label || item.universityName }}</strong>
+                              <span>{{ item.universityProvince || "-" }} · {{ item.majorName || "院校志愿" }}</span>
+                            </div>
+                            <el-tag size="small" :type="strategyTagType(item.strategyLabel || item.strategy)" effect="light">
+                              {{ formatStrategyLabel(item.strategyLabel || item.strategy) }}
+                            </el-tag>
+                          </div>
+                          <div class="gk-card__stats">
+                            <span>录取概率 <strong>{{ item.admissionProbability ?? "-" }}%</strong></span>
+                            <span>最低位次 <strong>{{ item.minRank ?? "-" }}</strong></span>
+                            <span>位次差 <strong>{{ item.rankGap ?? "-" }}</strong></span>
+                          </div>
+                          <div class="gk-card__foot">
+                            <span>{{ Array.isArray(item.matchReasons) ? item.matchReasons.slice(0, 2).join("；") : "" }}</span>
+                            <button type="button" class="gk-card__add" @click="openAddDialog(item)">加入志愿表</button>
+                          </div>
+                        </article>
+                      </div>
+                      <div v-if="hasErrorPayload(tool)" class="gk-error">{{ tool.payload.errorMessage || tool.payload.errorCode }}</div>
+                    </div>
+                    <div v-for="(msg, mi) in group.assistant" :key="`m-${gi}-${mi}`" class="xz-answer">
+                      <div :class="['gk-answer__body', { 'is-collapsed': isCollapsedAnswer(msg) }]">
+                        <div v-if="msg.content" class="gk-answer__content" v-html="answerHtml(msg)"></div>
+                      </div>
+                      <button v-if="isLongAnswer(msg) && !msg.streaming" type="button" class="xz-answer__more" @click="expandAnswer(msg)">
+                        {{ isCollapsedAnswer(msg) ? "查看更多" : "收起" }}
+                      </button>
+                      <div v-if="!msg.streaming && msg.content" class="xz-actions">
+                        <button type="button" title="复制" @click="copyAnswer(msg)"><el-icon><CopyDocument /></el-icon></button>
+                        <button type="button" title="重新生成" @click="regenerateAnswer(msg)"><el-icon><RefreshRight /></el-icon></button>
+                        <button type="button" title="赞同" :class="{ 'is-active': answerFeedback[msg.id] === 'up' }" @click="setAnswerFeedback(msg, 'up')"><el-icon><CaretTop /></el-icon></button>
+                        <button type="button" title="反对" :class="{ 'is-active': answerFeedback[msg.id] === 'down' }" @click="setAnswerFeedback(msg, 'down')"><el-icon><CaretBottom /></el-icon></button>
+                      </div>
+                    </div>
+                    <div v-if="sending && gi === groups.length - 1 && !streamingStarted" class="gk-typing"><i></i><i></i><i></i></div>
+                  </div>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
 
-        <div ref="messageListRef" class="agent-message-list" v-loading="conversationLoading">
-          <article v-for="message in messages" :key="message.id" :class="['agent-message-row', `agent-message-row--${message.role}`]">
-            <div :class="bubbleClass(message)">
-              <div class="agent-bubble__meta"><span>{{ roleLabel(message) }}</span><time>{{ formatDateTime(message.createdAt) }}</time></div>
-              <div class="agent-bubble__content">{{ message.content }}</div>
-              <el-tag v-if="message.toolName" class="agent-bubble__tool" size="small" effect="plain">{{ message.toolName }}</el-tag>
-
-              <div v-if="hasProfilePayload(message)" class="agent-payload-grid">
-                <div><span>分数</span><strong>{{ message.payload.score ?? "-" }}</strong></div>
-                <div><span>科类</span><strong>{{ message.payload.subjectType || "-" }}</strong></div>
-                <div><span>省份</span><strong>{{ message.payload.examProvince || "-" }}</strong></div>
-              </div>
-              <div v-if="hasPlanPayload(message)" class="agent-inline-plan">
-                <strong>{{ message.payload.planName || "当前志愿表" }}</strong>
-                <span>{{ message.payload.itemCount ?? 0 }} 条志愿</span>
-              </div>
-              <div v-if="recommendationCards(message).length" class="agent-recommend-list">
-                <article v-for="(item, index) in recommendationCards(message)" :key="`${message.id}-${index}`" class="agent-recommend-card">
-                  <div class="agent-recommend-card__head">
-                    <div><strong>{{ item.label || item.universityName }}</strong><span>{{ item.universityProvince || "-" }} · {{ item.majorName || "院校志愿" }}</span></div>
-                    <el-tag size="small" type="success" effect="light">{{ formatStrategyLabel(item.strategyLabel || item.strategy) }}</el-tag>
-                  </div>
-                  <div class="agent-recommend-card__stats">
-                    <span>录取概率 <strong>{{ item.admissionProbability ?? "-" }}%</strong></span>
-                    <span>最低位次 <strong>{{ item.minRank ?? "-" }}</strong></span>
-                    <span>位次差 <strong>{{ item.rankGap ?? "-" }}</strong></span>
-                  </div>
-                  <div class="agent-recommend-card__foot">
-                    <span>{{ Array.isArray(item.matchReasons) ? item.matchReasons.slice(0, 2).join("；") : "" }}</span>
-                    <el-button type="primary" plain size="small" @click="openAddDialog(item)">加入志愿表</el-button>
-                  </div>
-                </article>
-              </div>
-              <div v-if="hasErrorPayload(message)" class="agent-error-inline">{{ message.payload.errorMessage || message.payload.errorCode }}</div>
+        <div class="xz-askbar">
+          <div class="xz-ask">
+            <textarea
+              v-model="draft"
+              rows="2"
+              class="xz-ask__area"
+              maxlength="1000"
+              placeholder="请输入您想咨询的问题，Shift+Enter换行"
+              @keydown.enter.exact.prevent="sendMessage()"
+            ></textarea>
+            <div class="xz-ask__row">
+              <button
+                v-for="pill in NAV_PILLS"
+                :key="pill.label"
+                type="button"
+                class="xz-ask__pill"
+                @click="router.push(pill.to)"
+              >
+                <el-icon><component :is="pill.icon" /></el-icon>{{ pill.label }}
+              </button>
+              <button
+                class="xz-ask__send"
+                :class="{ 'is-stop': sending }"
+                type="button"
+                :disabled="!sending && !canSend"
+                :title="sending ? '停止生成' : '发送'"
+                @click="sending ? stopGeneration() : sendMessage()"
+              >
+                <el-icon><VideoPause v-if="sending" /><Promotion v-else /></el-icon>
+              </button>
             </div>
-          </article>
-          <div v-if="!messages.length" class="agent-empty-state"><strong>开始第一轮对话</strong><span>选择右侧志愿表后，可以让 AI 推荐并协助调整方案。</span></div>
+          </div>
+          <p class="xz-tip">内容由AI生成，仅供参考使用，不作为决策建议～</p>
         </div>
+      </template>
+    </main>
 
-        <div class="agent-input-panel">
-          <el-input
-            v-model="draft"
-            type="textarea"
-            :rows="2"
-            resize="none"
-            maxlength="1000"
-            show-word-limit
-            :disabled="!activePlanId"
-            placeholder="输入你的问题，AI 将结合当前志愿表回答"
-            @keydown.enter.exact.prevent="sendMessage()"
-          />
-          <el-button class="agent-send-button" type="primary" circle :disabled="!canSend" :loading="sending" @click="sendMessage()">
-            <el-icon><Promotion /></el-icon>
-          </el-button>
-        </div>
-      </main>
-
-      <aside class="agent-plan-panel">
-        <div class="agent-plan-panel__head">
-          <strong>当前志愿表</strong>
-          <p>AI 推荐、加入和修改操作将写入当前选择的志愿表。</p>
-        </div>
-        <label class="agent-plan-selector">
-          <span>当前操作志愿表</span>
-          <el-select v-model="activePlanId" placeholder="请选择" :loading="plansLoading">
-            <el-option v-for="plan in plans" :key="plan.id" :label="plan.planName" :value="String(plan.id)" />
-          </el-select>
-        </label>
-        <div class="agent-plan-panel__actions">
-          <el-button type="primary" plain size="small" @click="createPlanDialogVisible = true">新建志愿表</el-button>
-        </div>
-        <div class="agent-plan-preview-title">志愿表预览 <span>{{ activePlanItems.length }} 条</span></div>
-        <div class="agent-plan-preview-list">
-          <article v-for="item in activePlanItems.slice(0, 4)" :key="item.planKey" class="agent-plan-preview-card">
-            <div><strong>{{ item.universityName }}</strong><el-tag size="small" effect="light">{{ formatStrategyLabel(item.strategy) }}</el-tag></div>
-            <span>{{ item.majorName || "院校志愿" }}</span>
-            <small>{{ item.universityProvince || "-" }} · 概率 {{ item.admissionProbability ?? "-" }}%</small>
-          </article>
-          <el-empty v-if="!activePlanItems.length" description="暂无志愿" :image-size="70" />
-        </div>
-        <el-button class="agent-plan-panel__jump" plain @click="emit('jump-to-plans')">查看完整志愿表</el-button>
-      </aside>
-    </div>
+    <el-drawer v-model="planDrawerVisible" title="当前志愿表" size="400px" direction="rtl">
+      <p class="gk-drawer-tip">AI 的读取、加入和移除操作均作用于当前选择的志愿表。</p>
+      <div class="gk-drawer-list">
+        <article v-for="item in activePlanItems" :key="item.planKey" class="gk-card">
+          <div class="gk-card__head">
+            <div>
+              <strong>{{ item.universityName }}</strong>
+              <span>{{ item.majorName || "院校志愿" }} · {{ item.universityProvince || "-" }}</span>
+            </div>
+            <el-tag size="small" :type="strategyTagType(item.strategy)" effect="light">{{ formatStrategyLabel(item.strategy) }}</el-tag>
+          </div>
+          <div class="gk-card__stats">
+            <span>录取概率 <strong>{{ item.admissionProbability ?? "-" }}%</strong></span>
+            <span>最低位次 <strong>{{ item.minRank ?? "-" }}</strong></span>
+          </div>
+        </article>
+        <el-empty v-if="!activePlanItems.length" description="暂无志愿" :image-size="80" />
+      </div>
+      <div class="gk-drawer-actions">
+        <el-button class="gk-btn-outline" @click="createPlanDialogVisible = true">新建志愿表</el-button>
+        <el-button class="gk-btn-primary" @click="planDrawerVisible = false; emit('jump-to-plans')">查看完整志愿表</el-button>
+      </div>
+    </el-drawer>
 
     <el-dialog v-model="addDialogVisible" title="加入志愿表" width="460px" destroy-on-close>
-      <p class="agent-dialog-tip">请选择目标志愿表，再确认写入。</p>
-      <el-select v-model="addTargetPlanId" class="agent-dialog-select" placeholder="请选择志愿表">
+      <p class="gk-dialog-tip">请选择目标志愿表，再确认写入。</p>
+      <el-select v-model="addTargetPlanId" class="gk-dialog-select" placeholder="请选择志愿表">
         <el-option v-for="plan in plans" :key="plan.id" :label="plan.planName" :value="String(plan.id)" />
         <el-option label="新建志愿表" value="new" />
       </el-select>
       <el-input v-if="addTargetPlanId === 'new'" v-model.trim="addNewPlanName" maxlength="30" placeholder="输入志愿表名称" />
-      <div v-if="pendingAddItem" class="agent-dialog-target">
+      <div v-if="pendingAddItem" class="gk-dialog-target">
         <strong>{{ pendingAddItem.universityName }}</strong><span>{{ pendingAddItem.majorName || "院校志愿" }}</span>
       </div>
-      <template #footer><el-button @click="addDialogVisible = false">取消</el-button><el-button type="primary" :loading="addSubmitting" @click="confirmAddItem">确认加入</el-button></template>
+      <template #footer>
+        <el-button @click="addDialogVisible = false">取消</el-button>
+        <el-button class="gk-btn-primary" :loading="addSubmitting" @click="confirmAddItem">确认加入</el-button>
+      </template>
     </el-dialog>
 
     <el-dialog v-model="createPlanDialogVisible" title="新建志愿表" width="420px" destroy-on-close>
-      <el-input v-model.trim="createPlanName" maxlength="30" placeholder="例如：2026浙江志愿方案-A" />
-      <template #footer><el-button @click="createPlanDialogVisible = false">取消</el-button><el-button type="primary" :loading="creating" @click="createEmptyPlan">创建</el-button></template>
+      <el-input v-model.trim="createPlanName" maxlength="30" placeholder="例如：2026湖南志愿方案-A" />
+      <template #footer>
+        <el-button @click="createPlanDialogVisible = false">取消</el-button>
+        <el-button class="gk-btn-primary" :loading="creating" @click="createEmptyPlan">创建</el-button>
+      </template>
     </el-dialog>
   </section>
 </template>

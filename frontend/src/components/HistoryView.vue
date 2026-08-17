@@ -199,10 +199,10 @@ function handleSizeChange(size) {
     <div class="history-list-header">
       <h3 class="history-list-title">查询记录列表</h3>
       <div class="history-list-actions">
-        <el-button type="primary" plain size="small" @click="emit('refresh')">
+        <button class="history-refresh-btn" @click="emit('refresh')">
           <el-icon><Clock /></el-icon>
           刷新
-        </el-button>
+        </button>
       </div>
     </div>
 
@@ -303,18 +303,18 @@ function handleSizeChange(size) {
 }
 
 .stats-card__icon--blue {
-  background: linear-gradient(135deg, #e8f0fe 0%, #d6e4ff 100%);
-  color: #1f6feb;
+  background: linear-gradient(135deg, #e8f4ff 0%, #d3eaff 100%);
+  color: #1890ff;
 }
 
 .stats-card__icon--green {
-  background: linear-gradient(135deg, #e6f9ee 0%, #c8f5d8 100%);
-  color: #16a34a;
+  background: linear-gradient(135deg, #e9f7f0 0%, #d1f0e0 100%);
+  color: #21a366;
 }
 
 .stats-card__icon--purple {
-  background: linear-gradient(135deg, #f0e8fe 0%, #e0d4ff 100%);
-  color: #7c3aed;
+  background: linear-gradient(135deg, #fff3e8 0%, #ffe3cf 100%);
+  color: #ff6600;
 }
 
 .stats-card__info {
@@ -398,13 +398,13 @@ function handleSizeChange(size) {
 }
 
 .history-filter-btn:hover {
-  border-color: #1f6feb;
-  color: #1f6feb;
+  border-color: #ff6600;
+  color: #ff6600;
 }
 
 .history-filter-btn.is-active {
-  background: #1f6feb;
-  border-color: #1f6feb;
+  background: #ff6600;
+  border-color: #ff6600;
   color: #fff;
 }
 
@@ -562,14 +562,36 @@ function handleSizeChange(size) {
 }
 
 .history-action-btn--view {
-  background: #f0f7ff;
-  border-color: #d0e3ff;
-  color: #1f6feb;
+  background: #fff9f2;
+  border-color: #ffc9a3;
+  color: #ff6600;
 }
 
 .history-action-btn--view:hover {
-  background: #e0f0ff;
-  border-color: #b0d0ff;
+  background: #ff6600;
+  border-color: #ff6600;
+  color: #fff;
+}
+
+.history-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border: 1px solid #ffc9a3;
+  border-radius: 16px;
+  background: #fff9f2;
+  color: #ff6600;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.history-refresh-btn:hover {
+  background: #ff6600;
+  border-color: #ff6600;
+  color: #fff;
 }
 
 .history-action-btn--delete {

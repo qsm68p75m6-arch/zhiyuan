@@ -6,7 +6,7 @@ const { auth, navigateTo } = inject("workspace");
 </script>
 
 <template>
-  <el-main class="app-main app-main--agent">
+  <div class="xz-page">
     <AgentWorkspace :token="auth?.token" :user="auth?.user" @jump-to-plans="navigateTo('plans')" />
-  </el-main>
+  </div>
 </template>

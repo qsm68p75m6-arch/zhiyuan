@@ -1,11 +1,7 @@
 <script setup>
 import { ElMessage, ElMessageBox } from "element-plus";
-import { ChatDotRound, Clock, Collection, DataAnalysis, Document, OfficeBuilding, Search, UserFilled } from "@element-plus/icons-vue";
 import { computed, onMounted, provide, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import admissionJourneyImage from "./assets/admission-journey.png";
-import AppHeader from "./components/AppHeader.vue";
-import BrandLockup from "./components/BrandLockup.vue";
 import {
   buildPlanItemKey,
   buildGroupedFromResult,
@@ -89,27 +85,6 @@ const loginForm = reactive({ username: "", password: "" });
 const profileForm = reactive({ score: "", subjectType: "", examProvince: "", confirmed: false });
 const scoreForm = reactive({ score: "", province: "", subjectType: "", recommendationMode: "SCHOOL_FIRST", majorKeyword: "" });
 const textForm = reactive({ requirementText: "" });
-
-const username = computed(() => auth.value?.user?.username || "用户");
-const isAdmin = computed(() => auth.value?.user?.role === "ADMIN");
-const adminSection = computed(() => String(currentRoute.query.section || "users"));
-const adminSectionTitles = {
-  users: "用户管理",
-  universities: "院校管理",
-  majors: "专业管理",
-  cutoffs: "院校录取线",
-  majorCutoffs: "专业录取线"
-};
-const userMeta = computed(() => {
-  if (isAdmin.value) return "";
-  const user = auth.value?.user || {};
-  return [user.examProvince, subjectTypeLabel(user.subjectType), user.score == null ? "" : `${user.score}分`]
-    .filter(Boolean)
-    .join(" · ");
-});
-const pageTitle = computed(() => currentRoute.name === "admin"
-  ? (adminSectionTitles[adminSection.value] || "数据管理")
-  : (currentRoute.meta.title || "推荐查询"));
 
 const historyHasResult = computed(() => historyGrouped.rush.length + historyGrouped.safe.length + historyGrouped.guarantee.length > 0);
 const planHasResult = computed(() => planGrouped.rush.length + planGrouped.safe.length + planGrouped.guarantee.length > 0);
@@ -1188,12 +1163,6 @@ function navigateTo(name) {
   }
 }
 
-function navigateAdminSection(section) {
-  if (currentRoute.name !== "admin" || adminSection.value !== section) {
-    router.push({ name: "admin", query: section === "users" ? {} : { section } });
-  }
-}
-
 provide("workspace", {
   activeMode,
   addCurrentPlanItem,
@@ -1304,72 +1273,7 @@ watch(() => scoreForm.subjectType, () => {
 </script>
 
 <template>
-  <RouterView v-if="currentRoute.meta.standalone || !currentRoute.meta.requiresAuth" />
-
-  <div v-else class="app-shell app-layout" :class="{ 'app-layout--agent': currentRoute.name === 'agent' }">
-    <aside class="app-sidebar">
-      <div class="app-brand">
-        <BrandLockup :admin="isAdmin" />
-      </div>
-
-      <nav v-if="!isAdmin" class="app-nav" aria-label="主导航">
-        <button class="app-nav__item" :class="{ 'is-active': currentRoute.name === 'recommend' }" @click="navigateTo('recommend')">
-          <el-icon><Search /></el-icon><span>推荐查询</span>
-        </button>
-        <button class="app-nav__item" :class="{ 'is-active': currentRoute.name === 'agent' }" @click="navigateTo('agent')">
-          <el-icon><ChatDotRound /></el-icon><span>AI 对话</span>
-        </button>
-        <button class="app-nav__item" :class="{ 'is-active': currentRoute.name === 'history' }" @click="navigateTo('history')">
-          <el-icon><Clock /></el-icon><span>历史记录</span>
-        </button>
-        <button class="app-nav__item" :class="{ 'is-active': currentRoute.name === 'plans' }" @click="navigateTo('plans')">
-          <el-icon><Document /></el-icon><span>志愿方案</span>
-        </button>
-      </nav>
-
-      <nav v-else class="app-nav" aria-label="管理导航">
-        <button class="app-nav__item" :class="{ 'is-active': adminSection === 'users' }" @click="navigateAdminSection('users')">
-          <el-icon><UserFilled /></el-icon><span>用户管理</span>
-        </button>
-        <button class="app-nav__item" :class="{ 'is-active': adminSection === 'universities' }" @click="navigateAdminSection('universities')">
-          <el-icon><OfficeBuilding /></el-icon><span>院校管理</span>
-        </button>
-        <button class="app-nav__item" :class="{ 'is-active': adminSection === 'majors' }" @click="navigateAdminSection('majors')">
-          <el-icon><Collection /></el-icon><span>专业管理</span>
-        </button>
-        <button class="app-nav__item" :class="{ 'is-active': adminSection === 'cutoffs' }" @click="navigateAdminSection('cutoffs')">
-          <el-icon><DataAnalysis /></el-icon><span>院校录取线</span>
-        </button>
-        <button class="app-nav__item" :class="{ 'is-active': adminSection === 'majorCutoffs' }" @click="navigateAdminSection('majorCutoffs')">
-          <el-icon><DataAnalysis /></el-icon><span>专业录取线</span>
-        </button>
-      </nav>
-
-      <div class="app-sidebar__art" aria-hidden="true">
-        <img :src="admissionJourneyImage" alt="" />
-      </div>
-    </aside>
-
-    <section class="app-content">
-      <AppHeader :title="pageTitle">
-        <div class="app-user">
-          <span class="app-user__meta">{{ userMeta }}</span>
-          <span class="app-user__avatar"><el-icon><UserFilled /></el-icon></span>
-          <strong>{{ username }}</strong>
-          <span class="app-user__divider" />
-          <el-button link @click="logout">退出</el-button>
-        </div>
-      </AppHeader>
-
-      <div class="app-route-view">
-        <RouterView v-slot="{ Component, route: matchedRoute }">
-          <KeepAlive include="RecommendationView">
-            <component :is="Component" :key="matchedRoute.name" />
-          </KeepAlive>
-        </RouterView>
-      </div>
-    </section>
-  </div>
+  <RouterView />
 
   <el-dialog
     v-model="planTargetDialogVisible"

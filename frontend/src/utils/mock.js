@@ -1,6 +1,6 @@
 // Mock 数据 - 用于无后端的演示模式
 
-const MOCK_USER = {
+export const MOCK_USER = {
   id: 1,
   username: "testuser",
   score: 630,
@@ -212,14 +212,53 @@ const MOCK_CONVERSATIONS = [
   {
     id: 1,
     title: "关于志愿填报的咨询",
-    createdAt: "2026-08-07T08:00:00"
+    messageCount: 3,
+    createdAt: "2026-08-07T08:00:00",
+    updatedAt: "2026-08-07T08:03:00"
   },
   {
     id: 2,
     title: "推荐计算机专业院校",
-    createdAt: "2026-08-06T15:30:00"
+    messageCount: 2,
+    createdAt: "2026-08-06T15:30:00",
+    updatedAt: "2026-08-06T15:35:00"
   }
 ];
+
+const MOCK_CONVERSATION_MESSAGES = {
+  1: [
+    {
+      id: 101,
+      role: "user",
+      content: "湖南 物理类 560 分，能上哪些大学？"
+    },
+    {
+      id: 102,
+      role: "assistant",
+      messageType: "tool_result",
+      toolName: "getUserProfile",
+      content: "",
+      payload: { score: 620, subjectType: "物理", examProvince: "湖南" }
+    },
+    {
+      id: 103,
+      role: "assistant",
+      content: "结合你的画像（湖南 · 物理类 · 620 分），给你一版冲稳保思路：\n\n## 冲刺档（录取概率 30%~50%）\n- 武汉大学（计算机类）：近三年最低位次 4500~5200，可冲\n- 华中科技大学（电子信息类）：位次贴合度较高\n\n## 稳妥档（50%~80%）\n- 湖南大学（土木工程）：本省招生计划多，稳妥\n- 中南大学（材料科学）：王牌专业，位次匹配\n\n## 保底档（>90%）\n- 湖南师范大学（数学与应用数学）\n- 长沙理工大学（电气工程）：省内就业口碑好\n\n建议按「2 冲 + 4 稳 + 3 保」铺开志愿梯度，避免全冲导致滑档。需要我把哪所加入志愿表，随时告诉我～"
+    }
+  ],
+  2: [
+    {
+      id: 201,
+      role: "user",
+      content: "帮我推荐计算机专业实力强的院校"
+    },
+    {
+      id: 202,
+      role: "assistant",
+      content: "计算机专业推荐这几所：\n\n1. **清华大学**：A+ 学科，体系结构与人工智能方向顶尖\n2. **北京大学**：理论与语言方向强，图灵班培养体系完整\n3. **浙江大学**：CS 科研产出稳居前列，实习资源丰富\n4. **国防科技大学**：系统软件与超算方向王牌\n5. **哈尔滨工业大学**：威海/深圳校区性价比高\n\n结合分数告诉我你的位次，我可以帮你算每所的录取概率。"
+    }
+  ]
+};
 
 const MOCK_ADMIN_USERS = [
   {
@@ -318,6 +357,42 @@ function saveAdminRecord(items, body, id = null) {
   return items[index];
 }
 
+// 构建 Agent 回合消息（供全量接口与 SSE 流接口复用）
+function buildAgentTurn(content) {
+  const now = () => new Date().toISOString();
+  const generatedMessages = [];
+  const push = (role, messageType, toolName, text, payload) =>
+    generatedMessages.push({
+      id: Date.now() + generatedMessages.length,
+      role,
+      messageType,
+      toolName: toolName || null,
+      content: text,
+      payload: payload || null,
+      createdAt: now()
+    });
+
+  if (content.includes("画像")) {
+    push("assistant", "tool_call", "getUserProfile", "读取用户画像…");
+    push("assistant", "tool_result", "getUserProfile", "已读取用户画像", { score: 630, subjectType: "物理类", examProvince: "浙江", username: "testuser" });
+    push("assistant", "text", null, "已读取你的画像：**浙江** · **物理类** · **630 分**。\n\n当前推荐策略按 **分数优先** 展开，位次约 **5000**。");
+  } else if (content.includes("志愿方案") || content.includes("当前")) {
+    push("assistant", "tool_call", "getCurrentPlan", "读取当前志愿表…");
+    push("assistant", "tool_result", "getCurrentPlan", "已读取当前志愿表", { planName: "冲稳保方案-A", itemCount: 8 });
+    push("assistant", "text", null, "当前志愿表《冲稳保方案-A》共 **8 条** 志愿：\n\n- 冲刺 3 条\n- 稳妥 3 条\n- 保底 2 条");
+  } else if (content.includes("推荐")) {
+    const rec = generateRecommendations(6);
+    const topItems = [...rec.rush, ...rec.safe, ...rec.guarantee].map((item) => ({ ...item, label: item.universityName }));
+    push("assistant", "tool_call", "recommendSchools", "生成院校推荐…");
+    push("assistant", "tool_result", "recommendSchools", `已生成 ${topItems.length} 条院校推荐`, { topItems });
+    push("assistant", "text", null, `根据你的 **630 分** 与位次，为你推荐 **${topItems.length}** 所院校，按 **冲 / 稳 / 保** 梯度排列：`);
+  } else {
+    push("assistant", "text", null, "这是演示模式的模拟回复。正式环境中，该问题将进入 Agent 工具流程，结合你的画像与志愿表生成结构化回答。");
+  }
+
+  return generatedMessages;
+}
+
 // Mock API 拦截器
 export function setupMockInterceptor() {
   const originalFetch = window.fetch;
@@ -392,6 +467,35 @@ export function setupMockInterceptor() {
       return mockResponse(MOCK_PLANS);
     }
 
+    // 获取当前方案草稿
+    if (path === "/api/plans/current" && method === "GET") {
+      const draft = MOCK_PLANS.find(p => p.planName === "当前方案草稿");
+      if (!draft) {
+        return mockResponse({ message: "not found" }, 404);
+      }
+      return mockResponse(draft);
+    }
+
+    // 更新当前方案草稿
+    if (path === "/api/plans/current" && method === "PUT") {
+      const body = JSON.parse(options.body);
+      let draft = MOCK_PLANS.find(p => p.planName === "当前方案草稿");
+      if (draft) {
+        Object.assign(draft, body, { id: draft.id, planName: "当前方案草稿" });
+      } else {
+        draft = { id: Date.now(), createdAt: new Date().toISOString(), ...body, planName: "当前方案草稿" };
+        MOCK_PLANS.unshift(draft);
+      }
+      return mockResponse(draft);
+    }
+
+    // 删除当前方案草稿
+    if (path === "/api/plans/current" && method === "DELETE") {
+      const idx = MOCK_PLANS.findIndex(p => p.planName === "当前方案草稿");
+      if (idx >= 0) MOCK_PLANS.splice(idx, 1);
+      return mockResponse({ success: true });
+    }
+
     // 获取方案详情
     if (path.match(/^\/api\/plans\/\d+$/) && method === "GET") {
       const id = parseInt(path.split("/").pop());
@@ -426,15 +530,66 @@ export function setupMockInterceptor() {
       return mockResponse({ id: Date.now(), title: "新对话", createdAt: new Date().toISOString() });
     }
 
-    // 发送消息
+    // 获取对话详情
+    if (path.match(/^\/api\/agent\/conversations\/\d+$/) && method === "GET") {
+      const id = parseInt(path.split("/").pop());
+      const item = MOCK_CONVERSATIONS.find((c) => c.id === id) || {};
+      return mockResponse({ id, title: item.title || "新的志愿对话", messages: MOCK_CONVERSATION_MESSAGES[id] || [] });
+    }
+
+    // 发送消息（全量回合，旧契约降级路径）
     if (path.match(/^\/api\/agent\/conversations\/\d+\/messages$/) && method === "POST") {
       const body = JSON.parse(options.body);
       return mockResponse({
         conversationId: parseInt(path.split("/")[3]),
-        messages: [
-          { role: "user", content: body.content, type: "text" },
-          { role: "assistant", content: "这是AI的回复。由于是演示模式，这里显示的是模拟数据。", type: "text" }
-        ]
+        generatedMessages: buildAgentTurn(String(body.content || ""))
+      });
+    }
+
+    // 流式对话（模拟 SSE 事件流，协议与 AI_CHAT_API_DESIGN.md 一致）
+    if (path.match(/^\/api\/agent\/conversations\/\d+\/stream$/) && method === "POST") {
+      const body = JSON.parse(options.body);
+      const conversationId = parseInt(path.split("/")[3]);
+      const turn = buildAgentTurn(String(body.content || ""));
+      const encoder = new TextEncoder();
+      const events = [];
+      let seq = 0;
+
+      for (const message of turn) {
+        if (message.messageType === "tool_call") {
+          seq += 1;
+          events.push({ event: "tool_call", data: { seq, toolName: message.toolName, content: message.content }, delay: 500 });
+        } else if (message.messageType === "tool_result") {
+          seq += 1;
+          events.push({ event: "tool_result", data: { seq, toolName: message.toolName, content: message.content, payload: message.payload }, delay: 650 });
+        } else {
+          const text = String(message.content || "");
+          for (let i = 0; i < text.length; i += 4) {
+            seq += 1;
+            events.push({ event: "delta", data: { seq, text: text.slice(i, i + 4) }, delay: 26 });
+          }
+          seq += 1;
+          events.push({ event: "message", data: { seq, message }, delay: 60 });
+        }
+      }
+      events.push({ event: "done", data: { conversationId, messageCount: turn.length }, delay: 120 });
+
+      const stream = new ReadableStream({
+        async start(controller) {
+          for (const evt of events) {
+            controller.enqueue(encoder.encode(`event: ${evt.event}\ndata: ${JSON.stringify(evt.data)}\n\n`));
+            await new Promise(resolve => setTimeout(resolve, evt.delay));
+          }
+          controller.close();
+        }
+      });
+
+      return new Response(stream, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-cache"
+        }
       });
     }
 

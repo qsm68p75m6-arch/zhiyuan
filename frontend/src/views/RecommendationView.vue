@@ -1,7 +1,11 @@
 <script setup>
-import { computed, inject, onActivated } from "vue";
+import { computed, inject, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import GkHeader from "../components/GkHeader.vue";
+import GkSidePanel from "../components/GkSidePanel.vue";
 import RecommendationResult from "../components/RecommendationResult.vue";
 import SchoolDetailDrawer from "../components/SchoolDetailDrawer.vue";
+import MajorPickDialog from "../components/MajorPickDialog.vue";
 import { RECOMMENDATION_MODE_OPTIONS, SUBJECT_OPTIONS, recommendationModeLabel } from "../utils/recommendation";
 
 const workspace = inject("workspace");
@@ -27,6 +31,40 @@ const recognizedConditions = computed(() => {
   if (parsed.riskPreference) values.push(parsed.riskPreference);
   return Array.from(new Set(values.filter(Boolean))).slice(0, 6);
 });
+
+const route = useRoute();
+const router = useRouter();
+
+const MODE_TABS = [
+  { key: "text", label: "文本查询", desc: "一句话描述需求" },
+  { key: "score", label: "分数查询", desc: "精确分数定位" }
+];
+
+function applyModeFromQuery() {
+  const mode = Array.isArray(route.query.mode) ? route.query.mode[0] : route.query.mode;
+  if (mode !== "SCHOOL_FIRST" && mode !== "MAJOR_FIRST") return;
+  activeMode.value = "score";
+  scoreForm.recommendationMode = mode;
+}
+
+onMounted(() => {
+  applyModeFromQuery();
+  loadCurrentPlanDraft();
+});
+
+function goAgentPlan() {
+  router.push({ path: "/agent", query: { q: "帮我定位目标院校，生成一份冲稳保志愿方案" } });
+}
+
+/* 可填专业 → 投放志愿表（与志愿填报器联动） */
+const majorPickVisible = ref(false);
+const majorPickItem = ref(null);
+const majorPickStrategy = ref("safe");
+function openMajorPick(item, strategy) {
+  majorPickItem.value = item;
+  majorPickStrategy.value = strategy || "safe";
+  majorPickVisible.value = true;
+}
 
 const latestRecommendationMode = computed(() => latestResult.value?.recommendationMode
   || latestResult.value?.parsed?.recommendationMode
@@ -63,110 +101,148 @@ async function queryMajorSuggestions(queryString, callback) {
 function formatRank(value) {
   return Number(value).toLocaleString("zh-CN");
 }
-
-onActivated(() => {
-  loadCurrentPlanDraft();
-});
 </script>
 
 <template>
-  <el-main class="app-main recommendation-view">
-    <section class="recommend-query">
-      <el-tabs v-model="activeMode" class="query-tabs">
-        <el-tab-pane label="文本查询" name="text">
-          <div class="text-query-row">
-            <el-input
-              v-model.trim="textForm.requirementText"
-              type="textarea"
-              :rows="4"
-              maxlength="500"
-              show-word-limit
-              resize="none"
-              placeholder="输入分数、科类、意向专业、地区或风险偏好"
-            />
-            <el-button type="primary" class="query-action" :loading="loading" @click="queryByText">开始推荐</el-button>
-          </div>
+  <div class="gk-page">
+    <GkHeader active="智能选大学" />
 
-          <div v-if="recognizedConditions.length" class="recognized-inline">
-            <span>已识别条件：</span>
-            <el-tag v-for="item in recognizedConditions" :key="item" effect="light">{{ item }}</el-tag>
-          </div>
-        </el-tab-pane>
+    <main class="gk-home__container gk-page__main">
+      <div class="gk-page__body">
+        <section class="gk-page__content gk-rec">
+          <div class="mnz-rec">
+            <div class="mnz-rec__head">
+              <div class="mnz-rec__heading">
+                <h2 class="mnz-rec__title">智能推荐查询</h2>
+                <p class="mnz-rec__desc">输入分数或一句话需求，AI 生成冲稳保院校推荐，一键加入志愿表</p>
+              </div>
+              <button type="button" class="mnz-wb__ai" @click="goAgentPlan"><i>AI</i>对话式定制</button>
+            </div>
 
-        <el-tab-pane label="分数查询" name="score">
-          <div class="score-query-panel">
-            <el-radio-group v-model="scoreForm.recommendationMode" class="priority-switch">
-              <el-radio-button v-for="opt in RECOMMENDATION_MODE_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</el-radio-button>
-            </el-radio-group>
+            <div class="mnz-rec__modes">
+              <button
+                v-for="tab in MODE_TABS"
+                :key="tab.key"
+                type="button"
+                class="mnz-rec__mode"
+                :class="{ 'is-active': activeMode === tab.key }"
+                @click="activeMode = tab.key"
+              >
+                <strong>{{ tab.label }}</strong>
+                <span>{{ tab.desc }}</span>
+              </button>
+            </div>
 
-            <div class="score-query-fields">
-              <label class="query-field">
-                <span>分数</span>
-                <el-input v-model="scoreForm.score" type="number" placeholder="650" />
-              </label>
-              <label class="query-field">
-                <span>省份</span>
-                <el-select v-model="scoreForm.province" placeholder="请选择">
-                  <el-option v-for="province in provinces" :key="province" :label="province" :value="province" />
-                </el-select>
-              </label>
-              <label class="query-field">
-                <span>科类</span>
-                <el-select v-model="scoreForm.subjectType" placeholder="请选择">
-                  <el-option v-for="opt in SUBJECT_OPTIONS" :key="opt.value" :label="opt.label" :value="opt.value" />
-                </el-select>
-              </label>
-              <label v-if="scoreForm.recommendationMode === 'MAJOR_FIRST'" class="query-field query-field--major">
-                <span>专业</span>
-                <el-autocomplete
-                  v-model="scoreForm.majorKeyword"
-                  clearable
-                  :fetch-suggestions="queryMajorSuggestions"
-                  :trigger-on-focus="false"
-                  :loading="majorSuggestionLoading"
-                  placeholder="输入专业名称"
-                />
-              </label>
-              <el-button type="primary" class="query-action" :loading="loading" @click="queryByScore">开始推荐</el-button>
+            <div class="mnz-rec__panel">
+              <template v-if="activeMode === 'text'">
+                <div class="mnz-rec__text">
+                  <el-input
+                    v-model.trim="textForm.requirementText"
+                    type="textarea"
+                    :rows="4"
+                    maxlength="500"
+                    show-word-limit
+                    resize="none"
+                    placeholder="输入分数、科类、意向专业、地区或风险偏好"
+                  />
+                  <button type="button" class="mnz-rec__go" :disabled="loading" @click="queryByText">
+                    <span>{{ loading ? "生成中…" : "开始推荐" }}</span>
+                  </button>
+                </div>
+
+                <div v-if="recognizedConditions.length" class="mnz-rec__tags">
+                  <span class="mnz-rec__tags-label">已识别条件</span>
+                  <span v-for="item in recognizedConditions" :key="item" class="mnz-rec__tag">{{ item }}</span>
+                </div>
+              </template>
+
+              <template v-else>
+                <div class="mnz-rec__seg">
+                  <button
+                    v-for="opt in RECOMMENDATION_MODE_OPTIONS"
+                    :key="opt.value"
+                    type="button"
+                    class="mnz-rec__seg-btn"
+                    :class="{ 'is-active': scoreForm.recommendationMode === opt.value }"
+                    @click="scoreForm.recommendationMode = opt.value"
+                  >
+                    {{ opt.label }}
+                  </button>
+                </div>
+
+                <div class="mnz-rec__fields">
+                  <label class="mnz-rec__field">
+                    <span>分数</span>
+                    <el-input v-model="scoreForm.score" type="number" placeholder="650" />
+                  </label>
+                  <label class="mnz-rec__field">
+                    <span>省份</span>
+                    <el-select v-model="scoreForm.province" placeholder="请选择">
+                      <el-option v-for="province in provinces" :key="province" :label="province" :value="province" />
+                    </el-select>
+                  </label>
+                  <label class="mnz-rec__field">
+                    <span>科类</span>
+                    <el-select v-model="scoreForm.subjectType" placeholder="请选择">
+                      <el-option v-for="opt in SUBJECT_OPTIONS" :key="opt.value" :label="opt.label" :value="opt.value" />
+                    </el-select>
+                  </label>
+                  <label v-if="scoreForm.recommendationMode === 'MAJOR_FIRST'" class="mnz-rec__field mnz-rec__field--major">
+                    <span>专业</span>
+                    <el-autocomplete
+                      v-model="scoreForm.majorKeyword"
+                      clearable
+                      :fetch-suggestions="queryMajorSuggestions"
+                      :trigger-on-focus="false"
+                      :loading="majorSuggestionLoading"
+                      placeholder="输入专业名称"
+                    />
+                  </label>
+                  <button type="button" class="mnz-rec__go" :disabled="loading" @click="queryByScore">
+                    <span>{{ loading ? "生成中…" : "开始推荐" }}</span>
+                  </button>
+                </div>
+              </template>
+
+              <div v-if="error" class="mnz-rec__error">{{ error }}</div>
+            </div>
+
+            <div v-if="scoreRankSummary" class="mnz-rec__rank" aria-live="polite">
+              <div class="mnz-rec__rank-item">
+                <span>本次成绩</span>
+                <strong>{{ scoreRankSummary.score }} 分</strong>
+              </div>
+              <div class="mnz-rec__rank-item mnz-rec__rank-item--ctx">
+                <span>{{ scoreRankSummary.province }} · {{ scoreRankSummary.subjectTypeLabel }}</span>
+              </div>
+              <div class="mnz-rec__rank-item">
+                <span>对应位次</span>
+                <strong>{{ formatRank(scoreRankSummary.userRank) }}</strong>
+              </div>
             </div>
           </div>
-        </el-tab-pane>
-      </el-tabs>
 
-      <div v-if="error" class="error query-error">{{ error }}</div>
-    </section>
+          <RecommendationResult
+            :loading="loading"
+            :grouped="displayedGrouped"
+            :summary="resultSummary"
+            :ai-summary="aiSummary"
+            :final-advice="finalAdvice"
+            :tips="resultTips"
+            :recommendation-mode="displayedRecommendationMode"
+            :rank-meta="latestRankMeta"
+            :show-add-action="true"
+            :show-ai-summary="resultMatchesActiveMode && latestSourceType === 'text'"
+            :selected-plan-keys="selectedPlanKeys"
+            @add-item="addCurrentPlanItem"
+            @view-school-detail="openSchoolDetail"
+            @pick-majors="openMajorPick"
+          />
+        </section>
 
-    <section v-if="scoreRankSummary" class="score-rank-summary" aria-live="polite">
-      <div class="score-rank-summary__lead">
-        <span>本次成绩</span>
-        <strong>{{ scoreRankSummary.score }} 分</strong>
+        <GkSidePanel />
       </div>
-      <div class="score-rank-summary__context">
-        <span>{{ scoreRankSummary.province }}</span>
-        <i aria-hidden="true" />
-        <span>{{ scoreRankSummary.subjectTypeLabel }}</span>
-      </div>
-      <div class="score-rank-summary__rank">
-        <span>对应位次</span>
-        <strong>{{ formatRank(scoreRankSummary.userRank) }}</strong>
-      </div>
-    </section>
-
-    <RecommendationResult
-      :loading="loading"
-      :grouped="displayedGrouped"
-      :summary="resultSummary"
-      :ai-summary="aiSummary"
-      :final-advice="finalAdvice"
-      :tips="resultTips"
-      :recommendation-mode="displayedRecommendationMode"
-      :rank-meta="latestRankMeta"
-      :show-add-action="true"
-      :show-ai-summary="resultMatchesActiveMode && latestSourceType === 'text'"
-      :selected-plan-keys="selectedPlanKeys"
-      @add-item="addCurrentPlanItem"
-      @view-school-detail="openSchoolDetail"
-    />
+    </main>
 
     <SchoolDetailDrawer
       v-model="schoolDetailVisible"
@@ -175,5 +251,12 @@ onActivated(() => {
       :majors="schoolDetailMajors"
       @add-selected="addSelectedMajorsToPlan"
     />
-  </el-main>
+
+    <MajorPickDialog
+      v-model:visible="majorPickVisible"
+      :item="majorPickItem"
+      :strategy="majorPickStrategy"
+      :user-score="scoreRankSummary ? Number(scoreRankSummary.score) : null"
+    />
+  </div>
 </template>

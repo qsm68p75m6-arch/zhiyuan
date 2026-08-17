@@ -3,12 +3,21 @@ import { ElMessage } from "element-plus";
 import { CircleCloseFilled, Lock, User, UserFilled } from "@element-plus/icons-vue";
 import { computed, inject, onMounted, reactive, ref, watch } from "vue";
 import { useRoute } from "vue-router";
+import GkHeader from "../components/GkHeader.vue";
 
 defineOptions({ name: "AdminView" });
 
 const route = useRoute();
 const workspace = inject("workspace");
 const section = computed(() => String(route.query.section || "users"));
+const sectionTitles = {
+  users: "用户管理",
+  universities: "院校管理",
+  majors: "专业管理",
+  cutoffs: "院校录取线",
+  majorCutoffs: "专业录取线"
+};
+const sectionTitle = computed(() => sectionTitles[section.value] || "数据管理");
 const token = computed(() => workspace?.auth?.value?.token || "");
 const currentUsername = computed(() => workspace?.auth?.value?.user?.username || "");
 const loading = ref(false);
@@ -319,7 +328,16 @@ onMounted(loadSection);
 </script>
 
 <template>
-  <main class="admin-view">
+  <div class="gk-page gk-admin">
+    <GkHeader admin-mode :active="sectionTitle" />
+
+    <main class="gk-home__container gk-page__main">
+      <div class="gk-admin__head">
+        <h2 class="gk-admin__title">{{ sectionTitle }}</h2>
+        <p class="gk-admin__sub">平台数据管理控制台 · 数据变更实时生效</p>
+      </div>
+
+      <main class="admin-view">
     <template v-if="section === 'users'">
       <section class="admin-overview" aria-label="用户概览">
         <div><el-icon class="admin-overview__icon"><User /></el-icon><span>用户总数<strong>{{ overview.totalCount || 0 }}</strong></span></div>
@@ -404,7 +422,9 @@ onMounted(loadSection);
       <section class="admin-filter-bar admin-filter-bar--records admin-filter-bar--major-cutoff"><label><span>院校</span><el-select v-model="majorCutoffFilters.universityId" filterable clearable placeholder="请选择院校"><el-option v-for="item in universities" :key="item.id" :label="item.name" :value="item.id" /></el-select></label><label><span>专业关键词</span><el-input v-model.trim="majorCutoffFilters.majorKeyword" clearable placeholder="请输入专业关键词" /></label><label><span>年份</span><el-input v-model="majorCutoffFilters.admissionYear" clearable placeholder="请输入年份" /></label><label><span>省份</span><el-input v-model.trim="majorCutoffFilters.province" clearable placeholder="请输入省份" /></label><label><span>科类</span><el-select v-model="majorCutoffFilters.subjectType" clearable placeholder="全部"><el-option label="物理类" value="PHYSICS" /><el-option label="历史类" value="HISTORY" /></el-select></label><div class="admin-filter-actions"><el-button type="primary" @click="loadMajorCutoffs">查询</el-button><el-button @click="resetMajorCutoffFilters">重置</el-button></div><el-button class="admin-create-button" type="primary" @click="openRecordDialog()">新增专业录取线</el-button></section>
       <section class="admin-table-panel"><el-table v-loading="loading" :data="pagedMajorCutoffs" height="100%"><el-table-column label="院校" min-width="190"><template #default="{ row }">{{ universityName(row.universityId) }}</template></el-table-column><el-table-column prop="majorName" label="专业名称" min-width="190" /><el-table-column prop="admissionYear" label="年份" width="90" /><el-table-column prop="province" label="招生省份" width="110" /><el-table-column label="科类" width="110"><template #default="{ row }">{{ subjectLabel(row.subjectType) }}</template></el-table-column><el-table-column prop="cutoffScore" label="最低分" width="100" /><el-table-column prop="minRank" label="最低位次" width="120" /><el-table-column label="操作" width="90"><template #default="{ row }"><el-button link type="primary" @click="openRecordDialog(row)">编辑</el-button></template></el-table-column></el-table><el-pagination v-model:current-page="majorCutoffPage" :page-size="pageSize" :total="majorCutoffs.length" layout="total, prev, pager, next" /></section>
     </template>
-  </main>
+      </main>
+    </main>
+  </div>
 
   <el-dialog v-model="settingsVisible" title="用户设置" width="480px" destroy-on-close>
     <div v-if="selectedUser" class="admin-user-dialog">

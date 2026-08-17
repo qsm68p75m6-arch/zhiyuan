@@ -2,7 +2,17 @@ import { createRouter, createWebHashHistory } from "vue-router";
 import { isUserProfileComplete, readStoredAuth } from "../utils/recommendation";
 
 const routes = [
-  { path: "/", redirect: "/recommend" },
+  { path: "/", name: "home", component: () => import("../views/HomeView.vue"), meta: { title: "首页" } },
+  { path: "/schools", name: "schools", component: () => import("../views/SchoolsView.vue"), meta: { title: "查大学" } },
+  { path: "/majors", name: "majors", component: () => import("../views/MajorsView.vue"), meta: { title: "查专业" } },
+  { path: "/majors/:code", name: "major-detail", component: () => import("../views/MajorDetailView.vue"), meta: { title: "专业详情" } },
+  { path: "/volunteer", name: "volunteer", component: () => import("../views/VolunteerView.vue"), meta: { title: "志愿填报" } },
+  { path: "/choose", name: "choose", component: () => import("../views/ChooseView.vue"), meta: { title: "智能选大学" } },
+  { path: "/rank", name: "rank", component: () => import("../views/RankView.vue"), meta: { title: "院校排行" } },
+  { path: "/segments", name: "segments", component: () => import("../views/SegmentsView.vue"), meta: { title: "一分一段" } },
+  { path: "/enroll", name: "enroll", component: () => import("../views/EnrollPlanView.vue"), meta: { title: "招生计划" } },
+  { path: "/news", name: "news", component: () => import("../views/NewsView.vue"), meta: { title: "高考资讯" } },
+  { path: "/news/:id", name: "news-detail", component: () => import("../views/NewsDetailView.vue"), meta: { title: "资讯详情" } },
   {
     path: "/login",
     name: "login",
@@ -15,12 +25,12 @@ const routes = [
     component: () => import("../views/ProfileSetupView.vue"),
     meta: { requiresAuth: true, standalone: true, profileSetup: true, title: "完善报考信息" }
   },
-  { path: "/recommend", name: "recommend", component: () => import("../views/RecommendationView.vue"), meta: { requiresAuth: true, keepAlive: true, title: "推荐查询" } },
-  { path: "/agent", name: "agent", component: () => import("../views/AgentView.vue"), meta: { requiresAuth: true, title: "AI 对话" } },
-  { path: "/history", name: "history", component: () => import("../views/HistoryRecordsView.vue"), meta: { requiresAuth: true, title: "历史记录" } },
-  { path: "/plans", name: "plans", component: () => import("../views/PlansView.vue"), meta: { requiresAuth: true, title: "志愿方案" } },
-  { path: "/admin", name: "admin", component: () => import("../views/AdminView.vue"), meta: { requiresAuth: true, requiresAdmin: true, title: "用户管理" } },
-  { path: "/:pathMatch(.*)*", redirect: "/recommend" }
+  { path: "/recommend", name: "recommend", component: () => import("../views/RecommendationView.vue"), meta: { requiresAuth: true, standalone: true, title: "推荐查询" } },
+  { path: "/agent", name: "agent", component: () => import("../views/AgentView.vue"), meta: { requiresAuth: true, standalone: true, title: "AI 对话" } },
+  { path: "/history", name: "history", component: () => import("../views/HistoryRecordsView.vue"), meta: { requiresAuth: true, standalone: true, title: "历史记录" } },
+  { path: "/plans", name: "plans", component: () => import("../views/PlansView.vue"), meta: { requiresAuth: true, standalone: true, title: "志愿方案" } },
+  { path: "/admin", name: "admin", component: () => import("../views/AdminView.vue"), meta: { requiresAuth: true, requiresAdmin: true, standalone: true, title: "管理后台" } },
+  { path: "/:pathMatch(.*)*", redirect: "/" }
 ];
 
 const router = createRouter({

@@ -1,33 +1,30 @@
 <script setup>
 import { inject } from "vue";
 import { DataLine, Location, Notebook, SetUp } from "@element-plus/icons-vue";
-import journeyImage from "../assets/admission-journey.png";
-import AppHeader from "../components/AppHeader.vue";
+import BrandLockup from "../components/BrandLockup.vue";
 import { SUBJECT_OPTIONS } from "../utils/recommendation";
 
 const { completeProfile, error, loading, logout, profileForm, provinces } = inject("workspace");
 </script>
 
 <template>
-  <div class="auth-page">
-    <AppHeader title="完善信息" standalone />
+  <div class="gk-auth">
+    <header class="gk-auth__topbar">
+      <div class="gk-auth__topbar-inner">
+        <BrandLockup />
+        <button class="gk-auth__back" type="button" @click="logout">退出登录</button>
+      </div>
+    </header>
 
-    <main class="auth-stage auth-stage--profile">
-      <section class="auth-scene auth-scene--profile">
-        <div class="auth-visual">
-          <div class="auth-visual__copy">
-            <strong>完善报考信息</strong>
-            <h1>填写基础信息，获取更精准的智能推荐</h1>
-            <p>省份、首选科目、分数将作为推荐的重要依据</p>
-          </div>
-          <img :src="journeyImage" alt="校园升学路径插画" />
-        </div>
+    <main class="gk-auth__stage">
+      <section class="gk-auth__card gk-auth__card--profile">
+        <div class="gk-auth__panel gk-auth__panel--profile">
+          <h1 class="gk-auth__title">完善报考信息</h1>
+          <p class="gk-auth__sub">省份、首选科目与分数将作为智能推荐的重要依据</p>
 
-        <div class="profile-form-panel">
-          <h2>学生基础信息</h2>
-          <el-form class="profile-form" label-position="top" :model="profileForm">
+          <el-form label-position="top" :model="profileForm">
             <el-form-item label="所在省份">
-              <el-select v-model="profileForm.examProvince" placeholder="请选择省份">
+              <el-select v-model="profileForm.examProvince" size="large" placeholder="请选择省份">
                 <template #prefix><el-icon><Location /></el-icon></template>
                 <el-option v-for="province in provinces" :key="province" :label="province" :value="province" />
               </el-select>
@@ -43,23 +40,27 @@ const { completeProfile, error, loading, logout, profileForm, provinces } = inje
             </el-form-item>
 
             <el-form-item label="高考分数">
-              <el-input v-model="profileForm.score" type="number" :prefix-icon="DataLine" placeholder="请输入分数">
+              <el-input v-model="profileForm.score" size="large" type="number" :prefix-icon="DataLine" placeholder="请输入分数">
                 <template #suffix>分</template>
               </el-input>
-              <p class="profile-field-hint">系统将结合近年录取数据进行智能分析</p>
+              <p class="gk-auth__hint">系统将结合近年录取数据进行智能分析</p>
             </el-form-item>
 
-            <el-checkbox v-model="profileForm.confirmed" class="profile-confirm">我已确认信息填写无误</el-checkbox>
+            <el-checkbox v-model="profileForm.confirmed" class="gk-auth__confirm">我已确认信息填写无误</el-checkbox>
 
-            <el-button type="primary" class="profile-submit" :loading="loading" @click="completeProfile">
-              下一步，开始推荐
-            </el-button>
-            <div v-if="error" class="error auth-error">{{ error }}</div>
+            <button class="gk-auth__submit" type="button" :disabled="loading" @click="completeProfile">
+              {{ loading ? "处理中…" : "下一步，开始推荐" }}
+            </button>
+            <div v-if="error" class="gk-auth__error">{{ error }}</div>
           </el-form>
 
-          <el-button link type="primary" class="profile-back" @click="logout">返回登录</el-button>
+          <div class="gk-auth__backline">
+            <button type="button" @click="logout">返回登录</button>
+          </div>
         </div>
       </section>
     </main>
+
+    <footer class="gk-auth__footer">© 2026 智愿AI报考平台 · 智能规划每一次选择</footer>
   </div>
 </template>
