@@ -18,6 +18,7 @@ warning: 753 lines add whitespace errors.
  M frontend/src/components/GkSidePanel.vue
  M frontend/src/components/MajorPickDialog.vue
  M frontend/src/components/RecommendSchoolRow.vue
+ M frontend/src/components/RecommendationResult.vue
  M frontend/src/components/VolunteerSheet.vue
  M frontend/src/router/index.js
  M frontend/src/styles.css
