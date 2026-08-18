@@ -1,17 +1,17 @@
 # CI Full Audit Result
 
 - Status: **FAILED**
-- Generated: 2026-08-18T10:29:08.585122+00:00
-- Commit: `453e6b81b1154d18b1fe96bc146fe8d99559687f`
+- Generated: 2026-08-18T10:38:11.484895+00:00
+- Commit: `53f710b7edff58aeb317503f801b7ca9c1a3c1d8`
 
 ## Step outcomes
 
-- patch: `success`
-- vite: `success`
-- maven: `success`
-- mysql: `success`
-- api: `failure`
-- e2e: `success`
+- patch: `failure`
+- vite: `skipped`
+- maven: `skipped`
+- mysql: `skipped`
+- api: `skipped`
+- e2e: `skipped`
 
 ## Maven tests
 
