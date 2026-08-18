@@ -1,4 +1,4 @@
-name: Full stack audit
+name: Recover audited source
 
 on:
   push:
@@ -10,45 +10,24 @@ permissions:
   contents: write
 
 concurrency:
-  group: full-audit-${{ github.ref }}
+  group: source-recovery-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  audit:
+  recover:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: college_recommendation
-          MYSQL_USER: zhiyuan
-          MYSQL_PASSWORD: zhiyuan123
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h localhost -proot"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=20
-
+    timeout-minutes: 20
     steps:
-      - name: Checkout CI carrier branch
+      - name: Checkout carrier branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Reconstruct and apply audited source
-        id: patch
-        continue-on-error: true
+      - name: Reconstruct last verified source tree
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p audit-results
-          exec > >(tee audit-results/patch.log) 2>&1
-          test -f audit/source-parts/part-00
           cat audit/source-parts/part-* > /tmp/ci-source.patch.gz.b64
           python3 - <<'PY'
           from pathlib import Path
@@ -56,9 +35,8 @@ jobs:
           text = path.read_text()
           wrong = '+PLjaze/'
           right = '+PLjmaze/'
-          count = text.count(wrong)
-          if count != 1:
-              raise SystemExit(f'expected exactly one damaged transfer fragment, found {count}')
+          if text.count(wrong) != 1:
+              raise SystemExit('unexpected first-layer carrier state')
           path.write_text(text.replace(wrong, right, 1))
           PY
           base64 --decode /tmp/ci-source.patch.gz.b64 > /tmp/ci-source.patch.gz
@@ -66,330 +44,51 @@ jobs:
           gzip -dc /tmp/ci-source.patch.gz > /tmp/ci-source.patch
           git apply --check --ignore-space-change --ignore-whitespace /tmp/ci-source.patch
           git apply --ignore-space-change --ignore-whitespace /tmp/ci-source.patch
-          test -f audit/incremental-parts/part-00
-          test -f audit/incremental.sha256
-          cat audit/incremental-parts/part-* > /tmp/ci-incremental.patch.gz.b64
-          base64 --decode /tmp/ci-incremental.patch.gz.b64 > /tmp/ci-incremental.patch.gz
-          echo "$(tr -d '[:space:]' < audit/incremental.sha256)  /tmp/ci-incremental.patch.gz" | sha256sum -c -
-          gzip -dc /tmp/ci-incremental.patch.gz > /tmp/ci-incremental.patch
-          git apply --check --ignore-space-change --ignore-whitespace /tmp/ci-incremental.patch
-          git apply --ignore-space-change --ignore-whitespace /tmp/ci-incremental.patch
+
+          old_commit=453e6b81b1154d18b1fe96bc146fe8d99559687f
+          rm -rf /tmp/old-incremental
+          mkdir -p /tmp/old-incremental
+          while IFS= read -r path; do
+            name="${path##*/}"
+            git show "$old_commit:$path" > "/tmp/old-incremental/$name"
+          done < <(git ls-tree -r --name-only "$old_commit" audit/incremental-parts | sort)
+          cat /tmp/old-incremental/part-* > /tmp/old-incremental.patch.gz.b64
+          base64 --decode /tmp/old-incremental.patch.gz.b64 > /tmp/old-incremental.patch.gz
+          echo "78b6b11e263b0e6e8120cd3b926ce62ecb5a40e127950123f6f059aa6ab52a4d  /tmp/old-incremental.patch.gz" | sha256sum -c -
+          gzip -dc /tmp/old-incremental.patch.gz > /tmp/old-incremental.patch
+          git apply --check --ignore-space-change --ignore-whitespace /tmp/old-incremental.patch
+          git apply --ignore-space-change --ignore-whitespace /tmp/old-incremental.patch
           git -c core.whitespace=cr-at-eol diff --check
-          test -f frontend/src/utils/remoteProbability.js
           test -f frontend/e2e/full-audit.mjs
           test -f src/test/java/com/zhiyuan/college/service/ProbabilityServiceTest.java
-          node --check frontend/e2e/full-audit.mjs
-          git status --short
 
-      - name: Set up Node 24
-        if: ${{ steps.patch.outcome == 'success' }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install frontend, build Vite, and verify production static
-        id: vite
-        if: ${{ steps.patch.outcome == 'success' }}
-        continue-on-error: true
+      - name: Package recovered tree as text carrier
         shell: bash
         run: |
           set -euo pipefail
-          exec > >(tee audit-results/vite.log) 2>&1
-          cd frontend
-          npm ci
-          npm run build
-          npm install --no-save --package-lock=false playwright@1.55.0
-          npx playwright install --with-deps chromium
-          cd ..
-          test -s src/main/resources/static/index.html
-          find src/main/resources/static -type f -print0 | sort -z | xargs -0 sha256sum > audit-results/production-static.sha256
-          grep -R -q '/api/probability' src/main/resources/static/assets
-          grep -R -q '/api/meta/rank' src/main/resources/static/assets
-          grep -R -q '/api/meta/score-rank' src/main/resources/static/assets
-          grep -R -q '/api/universities' src/main/resources/static/assets
-          grep -R -q '/schools/' src/main/resources/static/assets
+          rm -rf audit/recovery-parts
+          mkdir -p audit/recovery-parts
+          tar -czf /tmp/zhiyuan-recovered.tar.gz \
+            --exclude='./.git' \
+            --exclude='./audit' \
+            --exclude='./audit-results' \
+            --exclude='./CI_AUDIT_RESULT.md' \
+            --exclude='./target' \
+            --exclude='./frontend/node_modules' \
+            --exclude='./src/main/resources/static' \
+            .
+          base64 -w 0 /tmp/zhiyuan-recovered.tar.gz > /tmp/zhiyuan-recovered.tar.gz.b64
+          split -b 100000 -d -a 3 /tmp/zhiyuan-recovered.tar.gz.b64 audit/recovery-parts/part-
+          sha256sum /tmp/zhiyuan-recovered.tar.gz | awk '{print $1}' > audit/recovery.sha256
+          wc -c /tmp/zhiyuan-recovered.tar.gz /tmp/zhiyuan-recovered.tar.gz.b64 audit/recovery-parts/part-*
+          cat audit/recovery.sha256
 
-      - name: Set up Java 17
-        if: ${{ steps.patch.outcome == 'success' }}
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-          cache: maven
-
-      - name: Run complete Maven tests and package
-        id: maven
-        if: ${{ steps.patch.outcome == 'success' }}
-        continue-on-error: true
+      - name: Commit recovery carrier
         shell: bash
-        run: |
-          set -euo pipefail
-          exec > >(tee audit-results/maven.log) 2>&1
-          chmod +x mvnw
-          ./mvnw -B -V test
-          ./mvnw -B -DskipTests package
-          python3 - <<'PY'
-          from pathlib import Path
-          import json
-          import xml.etree.ElementTree as ET
-          totals = {'tests': 0, 'failures': 0, 'errors': 0, 'skipped': 0, 'timeSeconds': 0.0, 'files': 0}
-          for path in Path('target/surefire-reports').glob('TEST-*.xml'):
-              root = ET.parse(path).getroot()
-              totals['files'] += 1
-              for key in ('tests', 'failures', 'errors', 'skipped'):
-                  totals[key] += int(root.attrib.get(key, 0))
-              totals['timeSeconds'] += float(root.attrib.get('time', 0))
-          if totals['files'] == 0:
-              raise SystemExit('no Surefire XML reports found')
-          Path('audit-results/maven-summary.json').write_text(json.dumps(totals, ensure_ascii=False, indent=2))
-          if totals['failures'] or totals['errors']:
-              raise SystemExit(f'Maven test failures: {totals}')
-          PY
-          test -n "$(find target -maxdepth 1 -name '*.jar' ! -name '*.original' -print -quit)"
-
-      - name: Initialize and validate MySQL 8 schema/data
-        id: mysql
-        if: ${{ steps.patch.outcome == 'success' }}
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -euo pipefail
-          exec > >(tee audit-results/mysql.log) 2>&1
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq mysql-client
-          for attempt in $(seq 1 60); do
-            mysqladmin ping -h 127.0.0.1 -uroot -proot --silent && break
-            sleep 2
-          done
-          mysqladmin ping -h 127.0.0.1 -uroot -proot --silent
-          mysql --default-character-set=utf8mb4 -h 127.0.0.1 -uroot -proot college_recommendation < sql/schema.sql
-          mysql --default-character-set=utf8mb4 -h 127.0.0.1 -uroot -proot < sql/data.sql
-          mysql --batch --skip-column-names -h 127.0.0.1 -uroot -proot college_recommendation -e "SELECT CONCAT('universities=', COUNT(*)) FROM university; SELECT CONCAT('cutoffs=', COUNT(*)) FROM admission_cutoff; SELECT CONCAT('major_cutoffs=', COUNT(*)) FROM major_admission_cutoff; SELECT CONCAT('score_rank=', COUNT(*)) FROM score_rank_mapping;" | tee audit-results/mysql-counts.txt
-          test "$(mysql --batch --skip-column-names -h 127.0.0.1 -uroot -proot college_recommendation -e 'SELECT COUNT(*) FROM university')" -ge 6
-
-      - name: Start real backend and smoke public APIs
-        id: api
-        if: ${{ steps.patch.outcome == 'success' && steps.maven.outcome == 'success' && steps.mysql.outcome == 'success' }}
-        continue-on-error: true
-        shell: bash
-        env:
-          SPRING_PROFILES_ACTIVE: prod
-          DB_HOST: 127.0.0.1
-          DB_PORT: '3306'
-          DB_NAME: college_recommendation
-          DB_USER: zhiyuan
-          DB_PASSWORD: zhiyuan123
-          DB_SCHEMA_INIT_MODE: never
-          CACHE_REDIS_ENABLED: 'false'
-          ROCKETMQ_ENABLED: 'false'
-          QWEN_ENABLED: 'false'
-          AUTH_JWT_SECRET: YXVkaXQtY2ktc2VjcmV0LWF0LWxlYXN0LTMyaXRzLTIwMjY=
-        run: |
-          set -euo pipefail
-          exec > >(tee audit-results/api-smoke.log) 2>&1
-          JAR="$(find target -maxdepth 1 -name '*.jar' ! -name '*.original' -print -quit)"
-          test -n "$JAR"
-          java -jar "$JAR" > audit-results/backend.log 2>&1 &
-          APP_PID=$!
-          cleanup() { kill "$APP_PID" 2>/dev/null || true; wait "$APP_PID" 2>/dev/null || true; }
-          trap cleanup EXIT
-          ready=0
-          for attempt in $(seq 1 90); do
-            if curl -fsS 'http://127.0.0.1:8080/api/universities?page=1&size=1' >/dev/null; then
-              ready=1
-              break
-            fi
-            if ! kill -0 "$APP_PID" 2>/dev/null; then
-              cat audit-results/backend.log
-              exit 1
-            fi
-            sleep 2
-          done
-          if [ "$ready" -ne 1 ]; then
-            cat audit-results/backend.log
-            exit 1
-          fi
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          from urllib.parse import urlencode
-          from urllib.request import Request, urlopen
-          base = 'http://127.0.0.1:8080'
-          checks = []
-          def get(path, params=None):
-              url = base + path
-              if params:
-                  url += '?' + urlencode(params)
-              with urlopen(url, timeout=20) as response:
-                  body = json.load(response)
-                  checks.append({'method': 'GET', 'url': url, 'status': response.status})
-                  return body
-          def post(path, payload):
-              data = json.dumps(payload, ensure_ascii=False).encode()
-              request = Request(base + path, data=data, headers={'Content-Type': 'application/json'}, method='POST')
-              with urlopen(request, timeout=20) as response:
-                  body = json.load(response)
-                  checks.append({'method': 'POST', 'url': base + path, 'status': response.status})
-                  return body
-          common = {'examProvince': '浙江', 'subjectType': 'PHYSICS', 'score': 620, 'userRank': 26000, 'page': 1, 'size': 5}
-          for sort_name in ('score_desc', 'score_asc', 'rank_asc', 'name', 'probability_desc'):
-              body = get('/api/universities', {**common, 'sort': sort_name})
-              assert body['items'], (sort_name, body)
-              assert len(body['items']) <= 5
-              ids = [item['id'] for item in body['items']]
-              assert len(ids) == len(set(ids)), (sort_name, ids)
-              assert body['total'] >= len(body['items'])
-          filtered = get('/api/universities', {**common, 'level': '985', 'withDataOnly': 'true'})
-          assert filtered['items'] and all(item['is985'] for item in filtered['items'])
-          detail = get('/api/universities/1', {'examProvince': '浙江', 'subjectType': '物理', 'score': 620, 'userRank': 26000})
-          assert detail['id'] == 1 and len(detail['cutoffHistory']) <= 3
-          rank = get('/api/meta/rank', {'province': '浙江', 'subjectType': 'PHYSICS', 'score': 620})
-          assert rank['rank'] and rank['rankSource'] in {'EXACT', 'INTERPOLATED', 'EXTRAPOLATED'}
-          curve = get('/api/meta/score-rank', {'province': '浙江', 'subjectType': '物理'})
-          assert curve['points'] and curve['pointCount'] == len(curve['points'])
-          single = post('/api/probability', {'score': 620, 'province': '浙江', 'subjectType': 'PHYSICS', 'userRank': 26000, 'universityId': 1})
-          assert single['universityId'] == 1 and single['probability'] is not None
-          batch = post('/api/probability/batch', {'score': 620, 'province': '浙江', 'subjectType': '物理', 'userRank': 26000, 'universityNames': ['浙江大学', '宁波大学', '浙江大学'], 'majorName': '计算机科学与技术'})
-          assert [item['universityName'] for item in batch] == ['浙江大学', '宁波大学']
-          assert all('probability' in item and 'explanation' in item for item in batch)
-          result = {'status': 'PASSED', 'checks': checks, 'listSorts': 5, 'batchItems': len(batch)}
-          Path('audit-results/api-smoke.json').write_text(json.dumps(result, ensure_ascii=False, indent=2))
-          print(json.dumps(result, ensure_ascii=False, indent=2))
-          PY
-
-      - name: Run Chromium 19-route / 28-scenario regression
-        id: e2e
-        if: ${{ steps.patch.outcome == 'success' && steps.vite.outcome == 'success' }}
-        continue-on-error: true
-        shell: bash
-        env:
-          BASE_URL: http://127.0.0.1:4173
-          E2E_REPORT: ../audit-results/e2e-result.json
-        run: |
-          set -euo pipefail
-          exec > >(tee audit-results/e2e.log) 2>&1
-          cd frontend
-          npm run preview -- --host 127.0.0.1 --port 4173 > ../audit-results/vite-preview.log 2>&1 &
-          PREVIEW_PID=$!
-          cleanup() { kill "$PREVIEW_PID" 2>/dev/null || true; wait "$PREVIEW_PID" 2>/dev/null || true; }
-          trap cleanup EXIT
-          for attempt in $(seq 1 60); do
-            curl -fsS http://127.0.0.1:4173/ >/dev/null && break
-            kill -0 "$PREVIEW_PID"
-            sleep 1
-          done
-          curl -fsS http://127.0.0.1:4173/ >/dev/null
-          node e2e/full-audit.mjs
-          cd ..
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          result = json.loads(Path('audit-results/e2e-result.json').read_text())
-          assert result['status'] == 'PASSED', result
-          assert result['routeCount'] == 19, result
-          assert result['scenarioCount'] == 28, result
-          assert result['failedCount'] == 0, result
-          PY
-
-      - name: Write auditable result report
-        id: report
-        if: ${{ always() }}
-        shell: bash
-        env:
-          PATCH_OUTCOME: ${{ steps.patch.outcome }}
-          VITE_OUTCOME: ${{ steps.vite.outcome }}
-          MAVEN_OUTCOME: ${{ steps.maven.outcome }}
-          MYSQL_OUTCOME: ${{ steps.mysql.outcome }}
-          API_OUTCOME: ${{ steps.api.outcome }}
-          E2E_OUTCOME: ${{ steps.e2e.outcome }}
-        run: |
-          set -euo pipefail
-          mkdir -p audit-results
-          python3 - <<'PY'
-          import json
-          import os
-          from datetime import datetime, timezone
-          from pathlib import Path
-          outcomes = {name: os.environ[f'{name.upper()}_OUTCOME'] for name in ('patch', 'vite', 'maven', 'mysql', 'api', 'e2e')}
-          passed = all(value == 'success' for value in outcomes.values())
-          lines = ['# CI Full Audit Result', '', f'- Status: **{"PASSED" if passed else "FAILED"}**', f'- Generated: {datetime.now(timezone.utc).isoformat()}', f'- Commit: `{os.environ.get("GITHUB_SHA", "unknown")}`', '', '## Step outcomes', '']
-          for name, value in outcomes.items():
-              lines.append(f'- {name}: `{value}`')
-          summary = Path('audit-results/maven-summary.json')
-          if summary.exists():
-              data = json.loads(summary.read_text())
-              lines += ['', '## Maven tests', '', f'- Tests: {data["tests"]}', f'- Failures: {data["failures"]}', f'- Errors: {data["errors"]}', f'- Skipped: {data["skipped"]}']
-          e2e = Path('audit-results/e2e-result.json')
-          if e2e.exists():
-              data = json.loads(e2e.read_text())
-              lines += ['', '## Browser regression', '', f'- Formal routes: {data["routeCount"]}', f'- Scenarios: {data["scenarioCount"]}', f'- Failed: {data["failedCount"]}']
-          static_hashes = Path('audit-results/production-static.sha256')
-          if static_hashes.exists():
-              lines += ['', '## Production static hashes', '', '```text', static_hashes.read_text().strip(), '```']
-          Path('CI_AUDIT_RESULT.md').write_text('\n'.join(lines) + '\n')
-          Path('audit-results/outcomes.json').write_text(json.dumps({'status': 'PASSED' if passed else 'FAILED', 'outcomes': outcomes}, indent=2))
-          PY
-          cat CI_AUDIT_RESULT.md
-          cat CI_AUDIT_RESULT.md >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Commit source/static/result or failure diagnostics
-        id: commit_result
-        if: ${{ always() }}
-        continue-on-error: true
-        shell: bash
-        env:
-          PATCH_OUTCOME: ${{ steps.patch.outcome }}
-          VITE_OUTCOME: ${{ steps.vite.outcome }}
-          MAVEN_OUTCOME: ${{ steps.maven.outcome }}
-          MYSQL_OUTCOME: ${{ steps.mysql.outcome }}
-          API_OUTCOME: ${{ steps.api.outcome }}
-          E2E_OUTCOME: ${{ steps.e2e.outcome }}
         run: |
           set -euo pipefail
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          all_passed=true
-          for value in "$PATCH_OUTCOME" "$VITE_OUTCOME" "$MAVEN_OUTCOME" "$MYSQL_OUTCOME" "$API_OUTCOME" "$E2E_OUTCOME"; do
-            [ "$value" = success ] || all_passed=false
-          done
-          if [ "$all_passed" = true ]; then
-            rm -rf audit/source-parts audit/incremental-parts audit/incremental.sha256
-            git add -A
-            git commit -m 'fix: complete verified full-stack audit'
-          else
-            git add CI_AUDIT_RESULT.md audit-results
-            git commit -m 'ci: record failed full-stack audit diagnostics'
-          fi
+          git add audit/recovery-parts audit/recovery.sha256
+          git commit -m 'ci: preserve recovered audited source tree'
           git push origin HEAD:audit/full-review-20260818-ci
-
-      - name: Upload complete audit evidence
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: full-audit-evidence-${{ github.run_number }}
-          if-no-files-found: warn
-          retention-days: 14
-          path: |
-            CI_AUDIT_RESULT.md
-            audit-results/
-            src/main/resources/static/
-
-      - name: Enforce all audit gates
-        if: ${{ always() }}
-        shell: bash
-        env:
-          PATCH_OUTCOME: ${{ steps.patch.outcome }}
-          VITE_OUTCOME: ${{ steps.vite.outcome }}
-          MAVEN_OUTCOME: ${{ steps.maven.outcome }}
-          MYSQL_OUTCOME: ${{ steps.mysql.outcome }}
-          API_OUTCOME: ${{ steps.api.outcome }}
-          E2E_OUTCOME: ${{ steps.e2e.outcome }}
-          COMMIT_OUTCOME: ${{ steps.commit_result.outcome }}
-        run: |
-          set -euo pipefail
-          for pair in "patch=$PATCH_OUTCOME" "vite=$VITE_OUTCOME" "maven=$MAVEN_OUTCOME" "mysql=$MYSQL_OUTCOME" "api=$API_OUTCOME" "e2e=$E2E_OUTCOME" "commit=$COMMIT_OUTCOME"; do
-            echo "$pair"
-            [ "${pair#*=}" = success ] || exit 1
-          done
