@@ -1,0 +1,94 @@
+name: Recover sandbox source
+
+on:
+  push:
+    branches:
+      - audit/sandbox-recovery
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sandbox-recovery-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout recovery branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct last verified source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat audit/source-parts/part-* > /tmp/ci-source.patch.gz.b64
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('/tmp/ci-source.patch.gz.b64')
+          text = path.read_text()
+          wrong = '+PLjaze/'
+          right = '+PLjmaze/'
+          if text.count(wrong) != 1:
+              raise SystemExit('unexpected first-layer carrier state')
+          path.write_text(text.replace(wrong, right, 1))
+          PY
+          base64 --decode /tmp/ci-source.patch.gz.b64 > /tmp/ci-source.patch.gz
+          echo "00b119c515d8037368c5ba084e922e87a308a9a1313c8b6f9b5c9e496558a769  /tmp/ci-source.patch.gz" | sha256sum -c -
+          gzip -dc /tmp/ci-source.patch.gz > /tmp/ci-source.patch
+          git apply --check --ignore-space-change --ignore-whitespace /tmp/ci-source.patch
+          git apply --ignore-space-change --ignore-whitespace /tmp/ci-source.patch
+
+          old_commit=453e6b81b1154d18b1fe96bc146fe8d99559687f
+          rm -rf /tmp/old-incremental
+          mkdir -p /tmp/old-incremental
+          while IFS= read -r path; do
+            name="${path##*/}"
+            git show "$old_commit:$path" > "/tmp/old-incremental/$name"
+          done < <(git ls-tree -r --name-only "$old_commit" audit/incremental-parts | sort)
+          cat /tmp/old-incremental/part-* > /tmp/old-incremental.patch.gz.b64
+          base64 --decode /tmp/old-incremental.patch.gz.b64 > /tmp/old-incremental.patch.gz
+          echo "78b6b11e263b0e6e8120cd3b926ce62ecb5a40e127950123f6f059aa6ab52a4d  /tmp/old-incremental.patch.gz" | sha256sum -c -
+          gzip -dc /tmp/old-incremental.patch.gz > /tmp/old-incremental.patch
+          git apply --check --ignore-space-change --ignore-whitespace /tmp/old-incremental.patch
+          git apply --ignore-space-change --ignore-whitespace /tmp/old-incremental.patch
+          git -c core.whitespace=cr-at-eol diff --check
+          test -f frontend/e2e/full-audit.mjs
+          test -f src/test/java/com/zhiyuan/college/service/ProbabilityServiceTest.java
+
+      - name: Package recovered tree as text carrier
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf audit/recovery-parts
+          mkdir -p audit/recovery-parts
+          tar -czf /tmp/zhiyuan-recovered.tar.gz \
+            --exclude='./.git' \
+            --exclude='./audit' \
+            --exclude='./audit-results' \
+            --exclude='./CI_AUDIT_RESULT.md' \
+            --exclude='./target' \
+            --exclude='./frontend/node_modules' \
+            --exclude='./src/main/resources/static' \
+            .
+          base64 -w 0 /tmp/zhiyuan-recovered.tar.gz > /tmp/zhiyuan-recovered.tar.gz.b64
+          split -b 100000 -d -a 3 /tmp/zhiyuan-recovered.tar.gz.b64 audit/recovery-parts/part-
+          sha256sum /tmp/zhiyuan-recovered.tar.gz | awk '{print $1}' > audit/recovery.sha256
+          wc -c /tmp/zhiyuan-recovered.tar.gz /tmp/zhiyuan-recovered.tar.gz.b64 audit/recovery-parts/part-*
+          cat audit/recovery.sha256
+
+      - name: Commit recovery carrier
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add audit/recovery-parts audit/recovery.sha256
+          git commit -m 'ci: preserve recovered audited source tree'
+          git push origin HEAD:audit/sandbox-recovery
