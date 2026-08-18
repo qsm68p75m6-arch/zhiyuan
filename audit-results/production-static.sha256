@@ -1,34 +1,3 @@
-# CI Full Audit Result
-
-- Status: **FAILED**
-- Generated: 2026-08-18T05:53:28.074049+00:00
-- Commit: `8c1f605eb4b836e3ac9437ac4a3d2ecf5cb48a7c`
-
-## Step outcomes
-
-- patch: `success`
-- vite: `success`
-- maven: `success`
-- mysql: `success`
-- api: `failure`
-- e2e: `failure`
-
-## Maven tests
-
-- Tests: 71
-- Failures: 0
-- Errors: 0
-- Skipped: 1
-
-## Browser regression
-
-- Formal routes: 19
-- Scenarios: 28
-- Failed: 3
-
-## Production static hashes
-
-```text
 4698368b912c366d0aadf5ca37d68f8008f97bfaa0e1d168ea23128b9b850faf  src/main/resources/static/assets/AdminView-CzgavNVI.js
 f2d3c3a9018ef4e6e764226026aa534256e04940b2a90654932abd825edbca07  src/main/resources/static/assets/AgentView-7FgaucHW.js
 5e766e37b49e737b5e5d4d7d2ff570867d803769598f405450ff2f8a1d9600e4  src/main/resources/static/assets/BrandLockup-bbuhdh56.js
@@ -88,4 +57,3 @@ f6d5546644fb18906492034b8e49c79386efb913a20f96d3ff7bd091262587b8  src/main/resou
 a8079f9ae74eecb151e278e4985ef54e1c9c60a2ef36f3c870e58be928992030  src/main/resources/static/logos/7.jpg
 b3a85129714ae331ca031b9d2185947e2ec954171e415b9c07759e5f9b3bf704  src/main/resources/static/logos/8.jpg
 865e326b8e6a474001cd34d18cbeca0ae9fe67ca2b32380e2ff72a7343b52703  src/main/resources/static/logos/9.jpg
-```

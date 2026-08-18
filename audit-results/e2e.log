@@ -1,0 +1,35 @@
+curl: (7) Failed to connect to 127.0.0.1 port 4173 after 0 ms: Couldn't connect to server
+{
+  "status": "FAILED",
+  "routeCount": 19,
+  "scenarioCount": 28,
+  "failedCount": 3
+}
+[
+  {
+    "path": "/ [network-fallback]",
+    "bodyChars": 1223,
+    "errors": [
+      "console: Failed to load resource: net::ERR_FAILED",
+      "console: [loadMetaOptions] TypeError: Failed to fetch\n    at ve (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:80589)\n    at ft (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:89314)\n    at http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:100147\n    at http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:33625\n    at cu (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:21321)\n    at oo (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:21392)\n    at Ld.t.__weh.t.__weh (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:33505)\n    at X1 (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:22902)\n    at ae (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:58054)\n    at mount (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:41610)",
+      "console: Failed to load resource: net::ERR_FAILED"
+    ]
+  },
+  {
+    "path": "/choose [network-fallback]",
+    "bodyChars": 546,
+    "errors": [
+      "console: Failed to load resource: net::ERR_FAILED",
+      "console: [loadMetaOptions] TypeError: Failed to fetch\n    at ve (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:80589)\n    at ft (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:89314)\n    at http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:100147\n    at http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:33625\n    at cu (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:21321)\n    at oo (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:21392)\n    at Ld.t.__weh.t.__weh (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:33505)\n    at X1 (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:22902)\n    at ae (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:58054)\n    at mount (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:41610)",
+      "console: Failed to load resource: net::ERR_FAILED"
+    ]
+  },
+  {
+    "path": "/volunteer [network-fallback]",
+    "bodyChars": 1050,
+    "errors": [
+      "console: Failed to load resource: net::ERR_FAILED",
+      "console: [loadMetaOptions] TypeError: Failed to fetch\n    at ve (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:80589)\n    at ft (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:89314)\n    at http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:100147\n    at http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:33625\n    at cu (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:21321)\n    at oo (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:21392)\n    at Ld.t.__weh.t.__weh (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:33505)\n    at X1 (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:22902)\n    at ae (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:58054)\n    at mount (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:41610)"
+    ]
+  }
+]
