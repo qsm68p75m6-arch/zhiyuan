@@ -73,7 +73,7 @@ jobs:
           gzip -dc /tmp/ci-incremental.patch.gz > /tmp/ci-incremental.patch
           git apply --check --ignore-space-change --ignore-whitespace /tmp/ci-incremental.patch
           git apply --ignore-space-change --ignore-whitespace /tmp/ci-incremental.patch
-          git diff --check
+          git -c core.whitespace=cr-at-eol diff --check
           test -f frontend/src/utils/remoteProbability.js
           test -f frontend/e2e/full-audit.mjs
           test -f src/test/java/com/zhiyuan/college/service/ProbabilityServiceTest.java
