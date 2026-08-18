@@ -1,17 +1,17 @@
 # CI Full Audit Result
 
 - Status: **FAILED**
-- Generated: 2026-08-18T10:12:41.720336+00:00
-- Commit: `3851b133bfc7a437f32fffc8d3a8ec86c97a93e7`
+- Generated: 2026-08-18T10:15:58.316735+00:00
+- Commit: `79fc5141d7b8ad6217925ae00addd414f58257a2`
 
 ## Step outcomes
 
-- patch: `failure`
-- vite: `skipped`
-- maven: `skipped`
-- mysql: `skipped`
-- api: `skipped`
-- e2e: `skipped`
+- patch: `success`
+- vite: `success`
+- maven: `success`
+- mysql: `success`
+- api: `failure`
+- e2e: `success`
 
 ## Maven tests
 
@@ -24,7 +24,7 @@
 
 - Formal routes: 19
 - Scenarios: 28
-- Failed: 3
+- Failed: 0
 
 ## Production static hashes
 

@@ -1,15 +1,15 @@
 {
-  "status": "FAILED",
+  "status": "PASSED",
   "routeCount": 19,
   "scenarioCount": 28,
-  "failedCount": 3,
+  "failedCount": 0,
   "results": [
     {
       "path": "/",
       "finalHash": "#/",
       "title": "首页 - 智愿AI报考平台",
       "bodyChars": 1223,
-      "durationMs": 1088,
+      "durationMs": 1115,
       "errors": []
     },
     {
@@ -17,7 +17,7 @@
       "finalHash": "#/schools",
       "title": "查大学 - 智愿AI报考平台",
       "bodyChars": 1877,
-      "durationMs": 1067,
+      "durationMs": 1071,
       "errors": []
     },
     {
@@ -33,7 +33,7 @@
       "finalHash": "#/majors",
       "title": "查专业 - 智愿AI报考平台",
       "bodyChars": 2932,
-      "durationMs": 1060,
+      "durationMs": 1065,
       "errors": []
     },
     {
@@ -41,7 +41,7 @@
       "finalHash": "#/majors/080901",
       "title": "专业详情 - 智愿AI报考平台",
       "bodyChars": 603,
-      "durationMs": 1060,
+      "durationMs": 1062,
       "errors": []
     },
     {
@@ -49,7 +49,7 @@
       "finalHash": "#/volunteer",
       "title": "志愿填报 - 智愿AI报考平台",
       "bodyChars": 1050,
-      "durationMs": 1065,
+      "durationMs": 1064,
       "errors": []
     },
     {
@@ -57,7 +57,7 @@
       "finalHash": "#/choose",
       "title": "智能选大学 - 智愿AI报考平台",
       "bodyChars": 546,
-      "durationMs": 1073,
+      "durationMs": 1062,
       "errors": []
     },
     {
@@ -65,7 +65,7 @@
       "finalHash": "#/rank",
       "title": "院校排行 - 智愿AI报考平台",
       "bodyChars": 677,
-      "durationMs": 1062,
+      "durationMs": 1063,
       "errors": []
     },
     {
@@ -73,7 +73,7 @@
       "finalHash": "#/segments",
       "title": "一分一段 - 智愿AI报考平台",
       "bodyChars": 862,
-      "durationMs": 1071,
+      "durationMs": 1086,
       "errors": []
     },
     {
@@ -81,7 +81,7 @@
       "finalHash": "#/enroll",
       "title": "招生计划 - 智愿AI报考平台",
       "bodyChars": 1679,
-      "durationMs": 1058,
+      "durationMs": 1066,
       "errors": []
     },
     {
@@ -89,7 +89,7 @@
       "finalHash": "#/news",
       "title": "高考资讯 - 智愿AI报考平台",
       "bodyChars": 1640,
-      "durationMs": 1064,
+      "durationMs": 1076,
       "errors": []
     },
     {
@@ -97,7 +97,7 @@
       "finalHash": "#/news/1",
       "title": "资讯详情 - 智愿AI报考平台",
       "bodyChars": 227,
-      "durationMs": 1062,
+      "durationMs": 1063,
       "errors": []
     },
     {
@@ -105,7 +105,7 @@
       "finalHash": "#/login",
       "title": "登录 - 智愿AI报考平台",
       "bodyChars": 172,
-      "durationMs": 1059,
+      "durationMs": 1067,
       "errors": []
     },
     {
@@ -113,7 +113,7 @@
       "finalHash": "#/profile-setup",
       "title": "完善报考信息 - 智愿AI报考平台",
       "bodyChars": 147,
-      "durationMs": 1051,
+      "durationMs": 1053,
       "errors": []
     },
     {
@@ -121,7 +121,7 @@
       "finalHash": "#/recommend",
       "title": "推荐查询 - 智愿AI报考平台",
       "bodyChars": 345,
-      "durationMs": 1058,
+      "durationMs": 1064,
       "errors": []
     },
     {
@@ -129,7 +129,7 @@
       "finalHash": "#/agent",
       "title": "AI 对话 - 智愿AI报考平台",
       "bodyChars": 309,
-      "durationMs": 1056,
+      "durationMs": 1062,
       "errors": []
     },
     {
@@ -137,7 +137,7 @@
       "finalHash": "#/history",
       "title": "历史记录 - 智愿AI报考平台",
       "bodyChars": 368,
-      "durationMs": 1066,
+      "durationMs": 1059,
       "errors": []
     },
     {
@@ -145,7 +145,7 @@
       "finalHash": "#/plans",
       "title": "志愿方案 - 智愿AI报考平台",
       "bodyChars": 454,
-      "durationMs": 1058,
+      "durationMs": 1060,
       "errors": []
     },
     {
@@ -153,7 +153,7 @@
       "finalHash": "#/admin",
       "title": "管理后台 - 智愿AI报考平台",
       "bodyChars": 218,
-      "durationMs": 1058,
+      "durationMs": 1068,
       "errors": []
     },
     {
@@ -161,7 +161,7 @@
       "finalHash": "#/login?redirect=/plans",
       "title": "登录 - 智愿AI报考平台",
       "bodyChars": 172,
-      "durationMs": 1051,
+      "durationMs": 1060,
       "errors": []
     },
     {
@@ -169,7 +169,7 @@
       "finalHash": "#/recommend",
       "title": "推荐查询 - 智愿AI报考平台",
       "bodyChars": 345,
-      "durationMs": 1060,
+      "durationMs": 1068,
       "errors": []
     },
     {
@@ -177,7 +177,7 @@
       "finalHash": "#/schools/not-a-number",
       "title": "院校详情 - 智愿AI报考平台",
       "bodyChars": 235,
-      "durationMs": 1058,
+      "durationMs": 1073,
       "errors": []
     },
     {
@@ -185,7 +185,7 @@
       "finalHash": "#/majors/not-real",
       "title": "专业详情 - 智愿AI报考平台",
       "bodyChars": 84,
-      "durationMs": 1061,
+      "durationMs": 1065,
       "errors": []
     },
     {
@@ -193,34 +193,26 @@
       "finalHash": "#/news/not-real",
       "title": "资讯详情 - 智愿AI报考平台",
       "bodyChars": 227,
-      "durationMs": 1054,
+      "durationMs": 1064,
       "errors": []
     },
     {
       "path": "/ [network-fallback]",
       "bodyChars": 1223,
-      "errors": [
-        "console: Failed to load resource: net::ERR_FAILED",
-        "console: [loadMetaOptions] TypeError: Failed to fetch\n    at ve (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:80589)\n    at ft (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:89314)\n    at http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:100147\n    at http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:33625\n    at cu (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:21321)\n    at oo (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:21392)\n    at Ld.t.__weh.t.__weh (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:33505)\n    at X1 (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:22902)\n    at ae (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:58054)\n    at mount (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:41610)",
-        "console: Failed to load resource: net::ERR_FAILED"
-      ]
+      "expectedOfflineErrorCount": 3,
+      "errors": []
     },
     {
       "path": "/choose [network-fallback]",
       "bodyChars": 546,
-      "errors": [
-        "console: Failed to load resource: net::ERR_FAILED",
-        "console: [loadMetaOptions] TypeError: Failed to fetch\n    at ve (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:80589)\n    at ft (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:89314)\n    at http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:100147\n    at http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:33625\n    at cu (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:21321)\n    at oo (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:21392)\n    at Ld.t.__weh.t.__weh (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:33505)\n    at X1 (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:22902)\n    at ae (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:58054)\n    at mount (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:41610)",
-        "console: Failed to load resource: net::ERR_FAILED"
-      ]
+      "expectedOfflineErrorCount": 3,
+      "errors": []
     },
     {
       "path": "/volunteer [network-fallback]",
       "bodyChars": 1050,
-      "errors": [
-        "console: Failed to load resource: net::ERR_FAILED",
-        "console: [loadMetaOptions] TypeError: Failed to fetch\n    at ve (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:80589)\n    at ft (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:89314)\n    at http://127.0.0.1:4173/assets/index-bcSMEUB4.js:51:100147\n    at http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:33625\n    at cu (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:21321)\n    at oo (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:21392)\n    at Ld.t.__weh.t.__weh (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:33505)\n    at X1 (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:22902)\n    at ae (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:58054)\n    at mount (http://127.0.0.1:4173/assets/index-bcSMEUB4.js:2:41610)"
-      ]
+      "expectedOfflineErrorCount": 2,
+      "errors": []
     },
     {
       "path": "rapid-navigation",

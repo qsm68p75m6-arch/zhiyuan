@@ -11,5 +11,64 @@ import com.zhiyuan.college.model.dto.ProbabilityBreakdownResponse;
 import com.zhiyuan.college.model.dto.ProbabilityRequest;
 warning: squelched 748 whitespace errors
 warning: 753 lines add whitespace errors.
-/tmp/ci-incremental.patch.gz: FAILED
-sha256sum: WARNING: 1 computed checksum did NOT match
+/tmp/ci-incremental.patch.gz: OK
+ M audit-results/patch.log
+ M frontend/src/App.vue
+ M frontend/src/components/GkHeader.vue
+ M frontend/src/components/GkSidePanel.vue
+ M frontend/src/components/MajorPickDialog.vue
+ M frontend/src/components/RecommendSchoolRow.vue
+ M frontend/src/components/VolunteerSheet.vue
+ M frontend/src/router/index.js
+ M frontend/src/styles.css
+ M frontend/src/utils/recommendation.js
+ M frontend/src/utils/volunteerCore.js
+ M frontend/src/views/ChooseView.vue
+ M frontend/src/views/EnrollPlanView.vue
+ M frontend/src/views/HomeView.vue
+ M frontend/src/views/LoginView.vue
+ M frontend/src/views/MajorDetailView.vue
+ M frontend/src/views/PlansView.vue
+ M frontend/src/views/RankView.vue
+ M frontend/src/views/RecommendationView.vue
+ M frontend/src/views/SchoolsView.vue
+ M frontend/src/views/SegmentsView.vue
+ M frontend/src/views/VolunteerView.vue
+ M mvnw
+ M mvnwDebug
+ M src/main/java/com/zhiyuan/college/config/GlobalExceptionHandler.java
+ M src/main/java/com/zhiyuan/college/config/SecurityConfig.java
+ M src/main/java/com/zhiyuan/college/mapper/AdmissionCutoffMapper.java
+ M src/main/java/com/zhiyuan/college/mapper/MajorAdmissionCutoffMapper.java
+ M src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java
+ M src/main/java/com/zhiyuan/college/mapper/UniversityMapper.java
+ M src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java
+ M src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java
+?? .gitattributes
+?? frontend/e2e/
+?? frontend/src/utils/api.js
+?? frontend/src/utils/examProfile.js
+?? frontend/src/utils/planSync.js
+?? frontend/src/utils/remoteProbability.js
+?? frontend/src/utils/scoreModel.js
+?? frontend/src/views/SchoolDetailView.vue
+?? src/main/java/com/zhiyuan/college/config/SubjectTypeConverter.java
+?? src/main/java/com/zhiyuan/college/controller/ProbabilityController.java
+?? src/main/java/com/zhiyuan/college/controller/ScoreRankController.java
+?? src/main/java/com/zhiyuan/college/controller/UniversityController.java
+?? src/main/java/com/zhiyuan/college/model/dto/CutoffHistoryItemResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/ProbabilityBatchRequest.java
+?? src/main/java/com/zhiyuan/college/model/dto/ProbabilityBreakdownResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/ProbabilityRequest.java
+?? src/main/java/com/zhiyuan/college/model/dto/RankLookupResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/ScoreRankCurveResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/ScoreRankPointResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/UniversityDetailResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/UniversityFilterOptionsResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/UniversityListItemResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/UniversityListResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/UniversityMajorItemResponse.java
+?? src/main/java/com/zhiyuan/college/service/ProbabilityService.java
+?? src/main/java/com/zhiyuan/college/service/UniversityQueryService.java
+?? src/main/resources/db/
+?? src/test/java/com/zhiyuan/college/service/ProbabilityServiceTest.java
