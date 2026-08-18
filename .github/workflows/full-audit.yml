@@ -69,7 +69,7 @@ jobs:
           test -f audit/incremental-parts/part-00
           cat audit/incremental-parts/part-* > /tmp/ci-incremental.patch.gz.b64
           base64 --decode /tmp/ci-incremental.patch.gz.b64 > /tmp/ci-incremental.patch.gz
-          echo "8d3649246e6ded99e612b764e1c56b856be316bf7b9e1e205cbd8a1fe61eeec6  /tmp/ci-incremental.patch.gz" | sha256sum -c -
+          echo "5590eca53d1d74db5fb246d5a9893e1b19a193a55f33995549af72da05be5d40  /tmp/ci-incremental.patch.gz" | sha256sum -c -
           gzip -dc /tmp/ci-incremental.patch.gz > /tmp/ci-incremental.patch
           git apply --check --ignore-space-change --ignore-whitespace /tmp/ci-incremental.patch
           git apply --ignore-space-change --ignore-whitespace /tmp/ci-incremental.patch
