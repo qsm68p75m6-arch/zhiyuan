@@ -11,4 +11,5 @@ import com.zhiyuan.college.model.dto.ProbabilityBreakdownResponse;
 import com.zhiyuan.college.model.dto.ProbabilityRequest;
 warning: squelched 748 whitespace errors
 warning: 753 lines add whitespace errors.
-/tmp/ci-incremental.patch.gz: OK
+/tmp/ci-incremental.patch.gz: FAILED
+sha256sum: WARNING: 1 computed checksum did NOT match
