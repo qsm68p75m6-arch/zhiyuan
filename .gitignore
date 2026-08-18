@@ -11,6 +11,10 @@ frontend/dist/
 *.log
 *.err
 *.out
+!audit-results/
+!audit-results/*.log
+!audit-results/*.err
+!audit-results/*.out
 can-write-root.txt
 
 _verify/
