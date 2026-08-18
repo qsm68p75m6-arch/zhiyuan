@@ -1,0 +1,4 @@
+universities=6
+cutoffs=12
+major_cutoffs=15
+score_rank=3

@@ -1,10 +1,10 @@
 {
   "status": "FAILED",
   "outcomes": {
-    "patch": "failure",
-    "vite": "skipped",
-    "maven": "skipped",
-    "mysql": "skipped",
+    "patch": "success",
+    "vite": "failure",
+    "maven": "success",
+    "mysql": "failure",
     "api": "skipped",
     "e2e": "skipped"
   }

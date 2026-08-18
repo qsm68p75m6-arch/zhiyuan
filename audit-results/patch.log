@@ -12,573 +12,63 @@ import com.zhiyuan.college.model.dto.ProbabilityRequest;
 warning: squelched 748 whitespace errors
 warning: 753 lines add whitespace errors.
 /tmp/ci-incremental.patch.gz: OK
-frontend/src/App.vue:545: trailing whitespace.
-+
-frontend/src/router/index.js:7: trailing whitespace.
-+  { path: "/schools/:id", name: "school-detail", component: () => import("../views/SchoolDetailView.vue"), meta: { title: "院校详情" } },
-frontend/src/views/LoginView.vue:41: trailing whitespace.
-+          <ul class="gk-auth__points">
-frontend/src/views/LoginView.vue:42: trailing whitespace.
-+            <li>一分一段 · 位次精准换算</li>
-frontend/src/views/LoginView.vue:43: trailing whitespace.
-+            <li>冲稳保分档 · 45 个志愿位</li>
-frontend/src/views/LoginView.vue:44: trailing whitespace.
-+            <li>院校历年录取数据一键对比</li>
-frontend/src/views/LoginView.vue:45: trailing whitespace.
-+          </ul>
-src/main/java/com/zhiyuan/college/config/GlobalExceptionHandler.java:68: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/config/SecurityConfig.java:31: trailing whitespace.
-+                        .requestMatchers("/api/auth/**", "/api/meta/**",
-src/main/java/com/zhiyuan/college/config/SecurityConfig.java:32: trailing whitespace.
-+                                "/api/universities", "/api/universities/**",
-src/main/java/com/zhiyuan/college/config/SecurityConfig.java:33: trailing whitespace.
-+                                "/api/probability", "/api/probability/**").permitAll()
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:7: trailing whitespace.
-+import java.util.List;
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:8: trailing whitespace.
-+import com.zhiyuan.college.model.dto.ScoreRankPointResponse;
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:28: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:29: trailing whitespace.
-+    @Select("""
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:30: trailing whitespace.
-+            SELECT score, rank_value AS rankValue
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:31: trailing whitespace.
-+            FROM score_rank_mapping
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:32: trailing whitespace.
-+            WHERE province = #{province}
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:33: trailing whitespace.
-+              AND subject_type = #{subjectType}
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:34: trailing whitespace.
-+              AND mapping_year = (
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:35: trailing whitespace.
-+                SELECT MAX(m2.mapping_year)
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:36: trailing whitespace.
-+                FROM score_rank_mapping m2
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:37: trailing whitespace.
-+                WHERE m2.province = #{province}
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:38: trailing whitespace.
-+                  AND m2.subject_type = #{subjectType}
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:39: trailing whitespace.
-+              )
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:40: trailing whitespace.
-+            ORDER BY score ASC
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:41: trailing whitespace.
-+            """)
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:42: trailing whitespace.
-+    List<ScoreRankPointResponse> findLatestCurve(@Param("province") String province,
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:43: trailing whitespace.
-+                                                @Param("subjectType") String subjectType);
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:44: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:45: trailing whitespace.
-+    @Select("""
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:46: trailing whitespace.
-+            SELECT MAX(mapping_year)
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:47: trailing whitespace.
-+            FROM score_rank_mapping
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:48: trailing whitespace.
-+            WHERE province = #{province}
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:49: trailing whitespace.
-+              AND subject_type = #{subjectType}
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:50: trailing whitespace.
-+            """)
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:51: trailing whitespace.
-+    Integer findLatestMappingYear(@Param("province") String province,
-src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java:52: trailing whitespace.
-+                                  @Param("subjectType") String subjectType);
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:10: trailing whitespace.
-+/**
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:11: trailing whitespace.
-+ * 录取概率 / 冲稳保策略的唯一口径。
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:12: trailing whitespace.
-+ *
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:13: trailing whitespace.
-+ * <p>{@link #explain} 返回完整拆解且<b>不做</b>最低概率过滤，供“查大学 / 院校详情 / 概率接口”使用；
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:14: trailing whitespace.
-+ * {@link #evaluate} 在它之上叠推荐门槛，行为与原版保持一致。</p>
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:15: trailing whitespace.
-+ */
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:19: trailing whitespace.
-+    public static final String BASIS_RANK = "RANK";
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:20: trailing whitespace.
-+    public static final String BASIS_SCORE = "SCORE";
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:21: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:35: trailing whitespace.
-+    /**
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:36: trailing whitespace.
-+     * 概率拆解：不过滤、不丢数据，把模型中间量全部输出。
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:37: trailing whitespace.
-+     */
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:38: trailing whitespace.
-+    public ProbabilityBreakdown explain(Integer userScore,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:39: trailing whitespace.
-+                                       Integer userRank,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:40: trailing whitespace.
-+                                       Integer cutoffScore,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:41: trailing whitespace.
-+                                       Integer minRank) {
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:42: trailing whitespace.
-+        Integer scoreGap = userScore == null || cutoffScore == null ? null : userScore - cutoffScore;
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:43: trailing whitespace.
-+        Integer rankGap = userRank == null || minRank == null ? null : minRank - userRank;
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:46: trailing whitespace.
-+        Integer probability = blendProbability(rankProbability, scoreProbability);
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:47: trailing whitespace.
-+        StrategyType strategy = probability == null ? null : classifyByProbability(probability);
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:48: trailing whitespace.
-+        boolean recommended = probability != null
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:49: trailing whitespace.
-+                && strategy != null
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:50: trailing whitespace.
-+                && probability >= scoringProperties.getMinimumProbability();
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:51: trailing whitespace.
-+        String basis = userRank != null && minRank != null
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:52: trailing whitespace.
-+                ? BASIS_RANK
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:53: trailing whitespace.
-+                : (userScore != null && cutoffScore != null ? BASIS_SCORE : null);
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:54: trailing whitespace.
-+        return new ProbabilityBreakdown(
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:55: trailing whitespace.
-+                basis,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:56: trailing whitespace.
-+                strategy,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:57: trailing whitespace.
-+                scoreGap,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:58: trailing whitespace.
-+                rankGap,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:59: trailing whitespace.
-+                rankProbability,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:60: trailing whitespace.
-+                scoreProbability,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:61: trailing whitespace.
-+                probability,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:62: trailing whitespace.
-+                recommended
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:63: trailing whitespace.
-+        );
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:64: trailing whitespace.
-+    }
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:66: trailing whitespace.
-+    public RecommendationDecision evaluate(Integer userScore,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:67: trailing whitespace.
-+                                           Integer userRank,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:68: trailing whitespace.
-+                                           AdmissionCutoffWithUniversity cutoff) {
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:69: trailing whitespace.
-+        ProbabilityBreakdown breakdown = explain(userScore, userRank, cutoff.getCutoffScore(), cutoff.getMinRank());
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:70: trailing whitespace.
-+        if (!breakdown.recommended() || breakdown.basis() == null) {
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:73: trailing whitespace.
-+        return new RecommendationDecision(
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:74: trailing whitespace.
-+                breakdown.basis(),
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:75: trailing whitespace.
-+                breakdown.strategy(),
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:76: trailing whitespace.
-+                breakdown.scoreGap(),
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:77: trailing whitespace.
-+                cutoff.getMinRank(),
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:78: trailing whitespace.
-+                userRank,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:79: trailing whitespace.
-+                breakdown.rankGap(),
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:80: trailing whitespace.
-+                breakdown.probability()
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:81: trailing whitespace.
-+        );
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:176: trailing whitespace.
-+    /** 概率模型的完整拆解（无过滤）。 */
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:177: trailing whitespace.
-+    public record ProbabilityBreakdown(String basis,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:178: trailing whitespace.
-+                                       StrategyType strategy,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:179: trailing whitespace.
-+                                       Integer scoreGap,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:180: trailing whitespace.
-+                                       Integer rankGap,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:181: trailing whitespace.
-+                                       Integer rankProbability,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:182: trailing whitespace.
-+                                       Integer scoreProbability,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:183: trailing whitespace.
-+                                       Integer probability,
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:184: trailing whitespace.
-+                                       boolean recommended) {
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:185: trailing whitespace.
-+    }
-src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java:186: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:5: trailing whitespace.
-+import com.zhiyuan.college.model.dto.ScoreRankPointResponse;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:6: trailing whitespace.
-+import java.time.Duration;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:7: trailing whitespace.
-+import java.time.Instant;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:8: trailing whitespace.
-+import java.util.ArrayList;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:9: trailing whitespace.
-+import java.util.List;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:10: trailing whitespace.
-+import java.util.concurrent.ConcurrentHashMap;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:16: trailing whitespace.
-+/**
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:17: trailing whitespace.
-+ * 分数 -> 位次的解析服务。
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:18: trailing whitespace.
-+ *
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:19: trailing whitespace.
-+ * <p>原版只做精确命中（一分一段表里必须正好有这一分），命不中就返回 null，
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:20: trailing whitespace.
-+ * 推荐会退化成“只比分数”。现在改成三级兑底：</p>
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:21: trailing whitespace.
-+ * <ol>
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:22: trailing whitespace.
-+ *   <li>EXACT：一分一段表精确命中</li>
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:23: trailing whitespace.
-+ *   <li>INTERPOLATED：落在曲线内部，相邻两点线性插值</li>
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:24: trailing whitespace.
-+ *   <li>EXTRAPOLATED：落在曲线两端之外，用端点斜率外推</li>
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:25: trailing whitespace.
-+ * </ol>
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:26: trailing whitespace.
-+ */
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:30: trailing whitespace.
-+    public static final String SOURCE_EXACT = "EXACT";
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:31: trailing whitespace.
-+    public static final String SOURCE_INTERPOLATED = "INTERPOLATED";
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:32: trailing whitespace.
-+    public static final String SOURCE_EXTRAPOLATED = "EXTRAPOLATED";
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:33: trailing whitespace.
-+    public static final String SOURCE_PROVIDED = "PROVIDED";
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:34: trailing whitespace.
-+    public static final String SOURCE_NONE = "NONE";
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:35: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:38: trailing whitespace.
-+    private static final Duration CURVE_CACHE_TTL = Duration.ofMinutes(10);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:43: trailing whitespace.
-+    private final ConcurrentHashMap<String, CachedCurve> curveCache = new ConcurrentHashMap<>();
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:53: trailing whitespace.
-+    /** 兼容原有调用方：能算出位次就返回（精确 -> 插值 -> 外推）。 */
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:55: trailing whitespace.
-+        return resolveRank(province, subjectType, score).rank();
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:56: trailing whitespace.
-+    }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:57: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:58: trailing whitespace.
-+    /** 带来源标记的位次解析。 */
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:59: trailing whitespace.
-+    public RankResolution resolveRank(String province, String subjectType, Integer score) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:60: trailing whitespace.
-+        if (province == null || province.isBlank()
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:61: trailing whitespace.
-+                || subjectType == null || subjectType.isBlank()
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:62: trailing whitespace.
-+                || score == null) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:63: trailing whitespace.
-+            return RankResolution.none();
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:64: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:65: trailing whitespace.
-+        String normalizedProvince = province.trim();
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:66: trailing whitespace.
-+        String normalizedSubject = subjectType.trim();
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:67: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:68: trailing whitespace.
-+        Integer exactRank = resolveExactRank(normalizedProvince, normalizedSubject, score);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:69: trailing whitespace.
-+        if (exactRank != null) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:70: trailing whitespace.
-+            return new RankResolution(exactRank, SOURCE_EXACT, mappingYear(normalizedProvince, normalizedSubject));
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:71: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:72: trailing whitespace.
-+        return estimateRank(normalizedProvince, normalizedSubject, score);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:73: trailing whitespace.
-+    }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:74: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:75: trailing whitespace.
-+    /** 考生自己填了位次时以位次为准，否则用一分一段推算。 */
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:76: trailing whitespace.
-+    public RankResolution resolveRankOrProvided(String province, String subjectType, Integer score, Integer providedRank) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:77: trailing whitespace.
-+        if (providedRank != null && providedRank > 0) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:78: trailing whitespace.
-+            return new RankResolution(providedRank, SOURCE_PROVIDED, mappingYear(province, subjectType));
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:79: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:80: trailing whitespace.
-+        return resolveRank(province, subjectType, score);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:81: trailing whitespace.
-+    }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:82: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:83: trailing whitespace.
-+    /** 最新年份的完整一分一段曲线，按分数升序。 */
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:84: trailing whitespace.
-+    public List<ScoreRankPointResponse> getLatestCurve(String province, String subjectType) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:85: trailing whitespace.
-+        if (province == null || province.isBlank() || subjectType == null || subjectType.isBlank()) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:86: trailing whitespace.
-+            return List.of();
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:87: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:88: trailing whitespace.
-+        return curveEntry(province.trim(), subjectType.trim()).points();
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:89: trailing whitespace.
-+    }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:90: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:91: trailing whitespace.
-+    public Integer getLatestMappingYear(String province, String subjectType) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:92: trailing whitespace.
-+        return mappingYear(province, subjectType);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:93: trailing whitespace.
-+    }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:94: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:95: trailing whitespace.
-+    private Integer mappingYear(String province, String subjectType) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:96: trailing whitespace.
-+        if (province == null || province.isBlank() || subjectType == null || subjectType.isBlank()) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:99: trailing whitespace.
-+        return curveEntry(province.trim(), subjectType.trim()).mappingYear();
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:100: trailing whitespace.
-+    }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:101: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:102: trailing whitespace.
-+    private RankResolution estimateRank(String province, String subjectType, int score) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:103: trailing whitespace.
-+        CachedCurve entry = curveEntry(province, subjectType);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:104: trailing whitespace.
-+        List<ScoreRankPointResponse> curve = entry.points();
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:105: trailing whitespace.
-+        if (curve.isEmpty()) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:106: trailing whitespace.
-+            return RankResolution.none();
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:107: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:108: trailing whitespace.
-+        if (curve.size() == 1) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:109: trailing whitespace.
-+            return new RankResolution(curve.get(0).getRankValue(), SOURCE_EXTRAPOLATED, entry.mappingYear());
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:110: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:111: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:112: trailing whitespace.
-+        ScoreRankPointResponse below = null;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:113: trailing whitespace.
-+        ScoreRankPointResponse above = null;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:114: trailing whitespace.
-+        for (ScoreRankPointResponse point : curve) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:115: trailing whitespace.
-+            if (point.getScore() <= score) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:116: trailing whitespace.
-+                below = point;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:117: trailing whitespace.
-+            }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:118: trailing whitespace.
-+            if (point.getScore() >= score) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:119: trailing whitespace.
-+                above = point;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:120: trailing whitespace.
-+                break;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:121: trailing whitespace.
-+            }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:122: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:123: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:124: trailing whitespace.
-+        if (below != null && above != null) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:125: trailing whitespace.
-+            if (below.getScore().intValue() == above.getScore().intValue()) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:126: trailing whitespace.
-+                return new RankResolution(below.getRankValue(), SOURCE_EXACT, entry.mappingYear());
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:127: trailing whitespace.
-+            }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:128: trailing whitespace.
-+            double ratio = (double) (score - below.getScore()) / (double) (above.getScore() - below.getScore());
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:129: trailing whitespace.
-+            double estimated = below.getRankValue() + ratio * (above.getRankValue() - below.getRankValue());
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:130: trailing whitespace.
-+            return new RankResolution(clampRank(estimated), SOURCE_INTERPOLATED, entry.mappingYear());
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:131: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:132: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:133: trailing whitespace.
-+        if (above == null) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:134: trailing whitespace.
-+            ScoreRankPointResponse top = curve.get(curve.size() - 1);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:135: trailing whitespace.
-+            ScoreRankPointResponse previous = curve.get(curve.size() - 2);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:136: trailing whitespace.
-+            double estimated = top.getRankValue() + slope(previous, top) * (score - top.getScore());
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:137: trailing whitespace.
-+            return new RankResolution(clampRank(estimated), SOURCE_EXTRAPOLATED, entry.mappingYear());
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:138: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:140: trailing whitespace.
-+        ScoreRankPointResponse bottom = curve.get(0);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:141: trailing whitespace.
-+        ScoreRankPointResponse next = curve.get(1);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:142: trailing whitespace.
-+        double estimated = bottom.getRankValue() + slope(bottom, next) * (score - bottom.getScore());
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:143: trailing whitespace.
-+        return new RankResolution(clampRank(estimated), SOURCE_EXTRAPOLATED, entry.mappingYear());
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:144: trailing whitespace.
-+    }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:145: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:146: trailing whitespace.
-+    private double slope(ScoreRankPointResponse left, ScoreRankPointResponse right) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:147: trailing whitespace.
-+        int scoreSpan = right.getScore() - left.getScore();
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:148: trailing whitespace.
-+        if (scoreSpan == 0) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:149: trailing whitespace.
-+            return 0d;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:150: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:151: trailing whitespace.
-+        return (double) (right.getRankValue() - left.getRankValue()) / (double) scoreSpan;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:152: trailing whitespace.
-+    }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:153: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:154: trailing whitespace.
-+    private int clampRank(double value) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:155: trailing whitespace.
-+        long rounded = Math.round(value);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:156: trailing whitespace.
-+        if (rounded < 1L) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:157: trailing whitespace.
-+            return 1;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:158: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:159: trailing whitespace.
-+        if (rounded > Integer.MAX_VALUE) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:160: trailing whitespace.
-+            return Integer.MAX_VALUE;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:161: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:162: trailing whitespace.
-+        return (int) rounded;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:163: trailing whitespace.
-+    }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:164: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:165: trailing whitespace.
-+    private CachedCurve curveEntry(String province, String subjectType) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:166: trailing whitespace.
-+        String key = province + ":" + subjectType;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:167: trailing whitespace.
-+        Instant now = Instant.now();
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:168: trailing whitespace.
-+        CachedCurve cached = curveCache.get(key);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:169: trailing whitespace.
-+        if (cached != null && cached.expiresAt().isAfter(now)) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:170: trailing whitespace.
-+            return cached;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:171: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:172: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:173: trailing whitespace.
-+        List<ScoreRankPointResponse> loaded;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:174: trailing whitespace.
-+        Integer year;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:175: trailing whitespace.
-+        try {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:176: trailing whitespace.
-+            loaded = scoreRankMappingMapper.findLatestCurve(province, subjectType);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:177: trailing whitespace.
-+            year = scoreRankMappingMapper.findLatestMappingYear(province, subjectType);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:178: trailing whitespace.
-+        } catch (Exception ex) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:179: trailing whitespace.
-+            log.warn("Failed to load score-rank curve for {} {}", province, subjectType, ex);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:180: trailing whitespace.
-+            return cached != null ? cached : CachedCurve.empty(now.plus(CURVE_CACHE_TTL));
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:181: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:182: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:183: trailing whitespace.
-+        List<ScoreRankPointResponse> sanitized = new ArrayList<>();
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:184: trailing whitespace.
-+        if (loaded != null) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:185: trailing whitespace.
-+            for (ScoreRankPointResponse point : loaded) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:186: trailing whitespace.
-+                if (point != null && point.getScore() != null && point.getRankValue() != null) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:187: trailing whitespace.
-+                    sanitized.add(point);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:188: trailing whitespace.
-+                }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:189: trailing whitespace.
-+            }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:190: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:191: trailing whitespace.
-+        CachedCurve entry = new CachedCurve(List.copyOf(sanitized), year, now.plus(CURVE_CACHE_TTL));
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:192: trailing whitespace.
-+        curveCache.put(key, entry);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:193: trailing whitespace.
-+        return entry;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:194: trailing whitespace.
-+    }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:195: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:196: trailing whitespace.
-+    private Integer resolveExactRank(String province, String subjectType, Integer score) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:197: trailing whitespace.
-+        String cacheKey = buildCacheKey(province, subjectType, score);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:245: trailing whitespace.
-+    /** 位次解析结果：rank 可以为 null（没数据），source 告诉前端这个位次是怎么来的。 */
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:246: trailing whitespace.
-+    public record RankResolution(Integer rank, String source, Integer mappingYear) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:247: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:248: trailing whitespace.
-+        public static RankResolution none() {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:249: trailing whitespace.
-+            return new RankResolution(null, SOURCE_NONE, null);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:250: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:251: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:252: trailing whitespace.
-+        public boolean present() {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:253: trailing whitespace.
-+            return rank != null;
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:254: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:255: trailing whitespace.
-+    }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:256: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:257: trailing whitespace.
-+    private record CachedCurve(List<ScoreRankPointResponse> points, Integer mappingYear, Instant expiresAt) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:258: trailing whitespace.
-+
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:259: trailing whitespace.
-+        private static CachedCurve empty(Instant expiresAt) {
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:260: trailing whitespace.
-+            return new CachedCurve(List.of(), null, expiresAt);
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:261: trailing whitespace.
-+        }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:262: trailing whitespace.
-+    }
-src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java:263: trailing whitespace.
-+
+ M audit-results/patch.log
+ M frontend/src/App.vue
+ M frontend/src/components/GkHeader.vue
+ M frontend/src/components/GkSidePanel.vue
+ M frontend/src/components/MajorPickDialog.vue
+ M frontend/src/components/RecommendSchoolRow.vue
+ M frontend/src/components/VolunteerSheet.vue
+ M frontend/src/router/index.js
+ M frontend/src/styles.css
+ M frontend/src/utils/recommendation.js
+ M frontend/src/utils/volunteerCore.js
+ M frontend/src/views/ChooseView.vue
+ M frontend/src/views/EnrollPlanView.vue
+ M frontend/src/views/HomeView.vue
+ M frontend/src/views/LoginView.vue
+ M frontend/src/views/MajorDetailView.vue
+ M frontend/src/views/PlansView.vue
+ M frontend/src/views/RankView.vue
+ M frontend/src/views/RecommendationView.vue
+ M frontend/src/views/SchoolsView.vue
+ M frontend/src/views/SegmentsView.vue
+ M frontend/src/views/VolunteerView.vue
+ M mvnw
+ M mvnwDebug
+ M src/main/java/com/zhiyuan/college/config/GlobalExceptionHandler.java
+ M src/main/java/com/zhiyuan/college/config/SecurityConfig.java
+ M src/main/java/com/zhiyuan/college/mapper/AdmissionCutoffMapper.java
+ M src/main/java/com/zhiyuan/college/mapper/MajorAdmissionCutoffMapper.java
+ M src/main/java/com/zhiyuan/college/mapper/ScoreRankMappingMapper.java
+ M src/main/java/com/zhiyuan/college/mapper/UniversityMapper.java
+ M src/main/java/com/zhiyuan/college/service/RecommendationPolicyService.java
+ M src/main/java/com/zhiyuan/college/service/ScoreRankMappingService.java
+?? .gitattributes
+?? frontend/e2e/
+?? frontend/src/utils/api.js
+?? frontend/src/utils/examProfile.js
+?? frontend/src/utils/planSync.js
+?? frontend/src/utils/remoteProbability.js
+?? frontend/src/utils/scoreModel.js
+?? frontend/src/views/SchoolDetailView.vue
+?? src/main/java/com/zhiyuan/college/config/SubjectTypeConverter.java
+?? src/main/java/com/zhiyuan/college/controller/ProbabilityController.java
+?? src/main/java/com/zhiyuan/college/controller/ScoreRankController.java
+?? src/main/java/com/zhiyuan/college/controller/UniversityController.java
+?? src/main/java/com/zhiyuan/college/model/dto/CutoffHistoryItemResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/ProbabilityBatchRequest.java
+?? src/main/java/com/zhiyuan/college/model/dto/ProbabilityBreakdownResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/ProbabilityRequest.java
+?? src/main/java/com/zhiyuan/college/model/dto/RankLookupResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/ScoreRankCurveResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/ScoreRankPointResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/UniversityDetailResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/UniversityFilterOptionsResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/UniversityListItemResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/UniversityListResponse.java
+?? src/main/java/com/zhiyuan/college/model/dto/UniversityMajorItemResponse.java
+?? src/main/java/com/zhiyuan/college/service/ProbabilityService.java
+?? src/main/java/com/zhiyuan/college/service/UniversityQueryService.java
+?? src/main/resources/db/
+?? src/test/java/com/zhiyuan/college/service/ProbabilityServiceTest.java

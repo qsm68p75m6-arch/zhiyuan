@@ -1,0 +1,28 @@
+mysqladmin: [Warning] Using a password on the command line interface can be insecure.
+mysqld is alive
+mysqladmin: [Warning] Using a password on the command line interface can be insecure.
+mysqld is alive
+mysql: [Warning] Using a password on the command line interface can be insecure.
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+1
+mysql: [Warning] Using a password on the command line interface can be insecure.
+mysql: [Warning] Using a password on the command line interface can be insecure.
+universities=6
+cutoffs=12
+major_cutoffs=15
+score_rank=3
+mysql: [Warning] Using a password on the command line interface can be insecure.
