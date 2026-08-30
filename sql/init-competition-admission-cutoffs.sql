@@ -21,6 +21,11 @@
 -- a brand-new local competition database, not as a production upgrade script.
 -- =============================================================================
 
+-- Set the client charset explicitly: docker-entrypoint-initdb.d runs this file
+-- with a non-utf8mb4 default client charset, which mojibakes the Chinese
+-- literals below (calibration_source / simulation_rule).
+SET NAMES utf8mb4;
+
 START TRANSACTION;
 
 INSERT INTO major_admission_cutoff (

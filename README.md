@@ -322,9 +322,8 @@ docker compose up -d --build
 首次启动会下载基础镜像、构建前后端，并在**空的** `mysql-data` 数据卷中依次执行：
 
 1. `sql/schema.sql`
-2. `sql/data.sql`
+2. `sql/data.sql`（权威基础数据导出：80所院校、100个专业、湖南省2024-2026年录取数据与7个演示账号）
 3. `sql/upgrade-20260822-unique-keys.sql`
-4. `sql/init-competition-admission-cutoffs.sql`
 
 初始化完成前不要中断 MySQL。查看状态和日志：
 

@@ -1,6 +1,5 @@
 package com.zhiyuan.college.service.agent;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zhiyuan.college.model.dto.AgentChatTurnResponse;
 import com.zhiyuan.college.model.dto.AgentMessageResponse;
@@ -10,6 +9,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,8 +22,12 @@ public class AgentChatService {
 
     private static final int RECENT_MESSAGE_LIMIT = 12;
     private static final int MAX_TOOL_CALLS_PER_TURN = 1;
-    private static final int TEMPLATE_STREAM_CHUNK_SIZE = 20;
-    private static final long TEMPLATE_STREAM_CHUNK_DELAY_MILLIS = 20L;
+    // GPT-like pacing: 2-5 characters per chunk with a 16-28ms pause lands around
+    // 150-200 chars/second, which reads as natural typing instead of a burst.
+    private static final int STREAM_CHUNK_MIN_SIZE = 2;
+    private static final int STREAM_CHUNK_MAX_SIZE = 5;
+    private static final long STREAM_CHUNK_MIN_DELAY_MILLIS = 16L;
+    private static final long STREAM_CHUNK_MAX_DELAY_MILLIS = 28L;
 
     private final AgentConversationService agentConversationService;
     private final AgentDecisionService agentDecisionService;
@@ -135,13 +139,14 @@ public class AgentChatService {
     }
 
     /**
-     * SSE streaming variant of {@link #sendMessage}. The final reply is streamed chunk-by-chunk:
+     * SSE streaming variant of {@link #sendMessage}. Events use named SSE types:
      * <ul>
-     *   <li>tool_call progress → {@code {"type":"tool","data":{...}}}</li>
-     *   <li>real data → template markdown sliced into repeated {@code {"type":"delta","data":"..."}}</li>
-     *   <li>LLM fallback advice (empty data) → disclaimer first, then model deltas</li>
-     *   <li>complete final message → {@code {"type":"message","data":{...}}} only when no text delta was sent</li>
-     *   <li>end → {@code {"type":"done","data":null}}</li>
+     *   <li>{@code tool_call} → {@code {"toolName":..., "content":...}} progress marker</li>
+     *   <li>{@code tool_result} → {@code {"toolName":..., "content":..., "payload":...}}</li>
+     *   <li>{@code delta} → {@code {"text":"..."}} progressive text chunks (GPT-style typing;
+     *       real LLM deltas when a model is configured, otherwise simulated pacing)</li>
+     *   <li>{@code message} → complete final message, only when no delta was sent at all</li>
+     *   <li>{@code done} → end of turn</li>
      * </ul>
      */
     public void streamMessage(Long userId,
@@ -162,8 +167,7 @@ public class AgentChatService {
                         ? "好的，请继续告诉我你的需求。" : decision.getReply();
                 agentConversationService.appendMessage(
                         userId, conversationId, AgentRoles.ASSISTANT, AgentMessageTypes.TEXT, reply, null, null);
-                sendEvent(emitter, "message",
-                        Map.of("message", Map.of("role", "assistant", "messageType", "text", "content", reply)));
+                streamTemplateText(emitter, reply);
                 sendDone(emitter);
                 return;
             }
@@ -199,15 +203,15 @@ public class AgentChatService {
             sendToolResult(emitter, toolResult);
 
             String finalText = replyFormatter.format(toolResult, currentUser);
-            boolean fallback = isFallbackResult(toolResult);
-            if (!fallback) {
-                // Real data → slice the template markdown into deltas so the demo always
-                // shows a streaming effect (fake streaming of an instantly generated template).
-                streamedText.set(streamTemplateText(emitter, finalText) || streamedText.get());
+            // If the executor/LLM already streamed text (fallback advice with a live model),
+            // finalText is the same content reformatted — re-streaming it would duplicate the
+            // answer. Otherwise simulate GPT-style token streaming for the final text.
+            if (!streamedText.get()) {
+                streamedText.set(streamTemplateText(emitter, finalText));
             }
             // The browser turns deltas into one live bubble. Sending the same final text again
             // as a message event made some clients render two identical answers. Only send a
-            // complete message when no text was streamed at all (for example an empty fallback).
+            // complete message when no text was streamed at all (for example an empty reply).
             if (!streamedText.get()) {
                 sendEvent(emitter, "message",
                         Map.of("message", Map.of("role", "assistant", "messageType", "text", "content", finalText)));
@@ -224,39 +228,33 @@ public class AgentChatService {
     }
 
     /**
-     * Fake streaming for template-generated text: splits the final markdown into small
-     * chunks emitted as {@code delta} events with a short pause so the demo always shows
-     * a streaming effect even when the answer was produced instantly.
+     * Simulated token streaming for instantly generated text: slices the final markdown
+     * into randomized small chunks emitted as {@code delta} events with short, irregular
+     * pauses so the UI shows a GPT-like typing effect even when the answer was produced
+     * locally in one shot.
      */
     private boolean streamTemplateText(SseEmitter emitter, String text) {
         if (text == null || text.isEmpty()) {
             return false;
         }
-        for (int i = 0; i < text.length(); i += TEMPLATE_STREAM_CHUNK_SIZE) {
-            String chunk = text.substring(i, Math.min(i + TEMPLATE_STREAM_CHUNK_SIZE, text.length()));
-            sendEvent(emitter, "delta", Map.of("text", chunk));
-            if (i + TEMPLATE_STREAM_CHUNK_SIZE < text.length()) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        int index = 0;
+        while (index < text.length()) {
+            int chunkSize = Math.min(
+                    random.nextInt(STREAM_CHUNK_MIN_SIZE, STREAM_CHUNK_MAX_SIZE + 1),
+                    text.length() - index);
+            sendEvent(emitter, "delta", Map.of("text", text.substring(index, index + chunkSize)));
+            index += chunkSize;
+            if (index < text.length()) {
                 try {
-                    Thread.sleep(TEMPLATE_STREAM_CHUNK_DELAY_MILLIS);
+                    Thread.sleep(random.nextLong(STREAM_CHUNK_MIN_DELAY_MILLIS, STREAM_CHUNK_MAX_DELAY_MILLIS + 1));
                 } catch (InterruptedException interruptedException) {
                     Thread.currentThread().interrupt();
-                    return i > 0;
+                    return true;
                 }
             }
         }
         return true;
-    }
-
-    private boolean isFallbackResult(AgentToolResult toolResult) {
-        if (toolResult == null || toolResult.getPayloadJson() == null || toolResult.getPayloadJson().isBlank()) {
-            return false;
-        }
-        try {
-            JsonNode payload = objectMapper.readTree(toolResult.getPayloadJson());
-            return payload.path("fallback").asBoolean(false);
-        } catch (Exception ex) {
-            return false;
-        }
     }
 
     private void sendEvent(SseEmitter emitter, String eventName, Object data) {

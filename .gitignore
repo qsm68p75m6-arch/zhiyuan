@@ -26,3 +26,6 @@ progress.md
 
 .DS_Store
 Thumbs.db
+
+# local secret backups
+.env.bak_*

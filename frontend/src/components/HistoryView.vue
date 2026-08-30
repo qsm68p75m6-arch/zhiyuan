@@ -143,7 +143,6 @@ function handleSizeChange(size) {
         <div class="stats-card__info">
           <span class="stats-card__label">近7天查询</span>
           <span class="stats-card__value">{{ stats.lastWeek }}</span>
-          <span class="stats-card__desc">较上周 <span class="stats-card__trend">↑ 12%</span></span>
         </div>
       </div>
       <div class="stats-card stats-card--purple">

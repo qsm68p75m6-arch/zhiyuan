@@ -204,6 +204,37 @@ function renderMarkdown(text) {
     .replace(/`([^`]+)`/g, "<code>$1</code>");
 }
 
+function isTableSeparatorLine(line) {
+  const trimmed = line.trim();
+  return trimmed.includes("-") && /^[\s|:-]+$/.test(trimmed);
+}
+
+// While streaming, a half-built markdown table keeps flipping between a plain
+// paragraph and a <table> on every re-render, which reads as flicker. Hold back
+// the trailing table block until its separator row exists, and only render rows
+// that are fully typed (end with a newline).
+function prepareStreamingMarkdown(text) {
+  if (!text) return "";
+  const endsWithNewline = text.endsWith("\n");
+  const lines = text.split(/\r?\n/);
+  if (endsWithNewline) lines.pop();
+  let blockStart = lines.length;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    if (!line || !line.includes("|")) break;
+    blockStart = i;
+  }
+  if (blockStart >= lines.length) return text;
+  const blockLines = lines.slice(blockStart);
+  if (!endsWithNewline) blockLines.pop();
+  if (!blockLines.some(isTableSeparatorLine)) {
+    return lines.slice(0, blockStart).join("\n");
+  }
+  // renderMarkdown's table regex needs the separator row to end with a newline,
+  // so a header-only table also needs the trailing "\n" to render as a table.
+  return [...lines.slice(0, blockStart), ...blockLines].join("\n") + "\n";
+}
+
 function refreshQuestions() {
   const current = quickQuestions.value.map((question) => QUESTION_POOL.indexOf(question));
   quickQuestions.value = current.map((index) => QUESTION_POOL[(index + 1) % QUESTION_POOL.length]);
@@ -486,6 +517,7 @@ function ensureLiveMessage() {
       role: "assistant",
       messageType: "text",
       content: "",
+      renderedContent: "",
       createdAt: new Date().toISOString(),
       streaming: true
     });
@@ -499,6 +531,32 @@ function finalizeLiveMessage(content) {
   if (content != null) liveMessage.content = content;
   liveMessage.streaming = false;
   liveMessage = null;
+}
+
+// Deltas arrive roughly every 20ms. Re-parsing markdown and re-scrolling on every
+// one forces constant layout work and makes tables flicker, so batch both: the
+// rendered snapshot updates on a short timer and scrolling coalesces per frame.
+let streamRenderTimer = null;
+function scheduleStreamRender() {
+  if (streamRenderTimer != null) return;
+  streamRenderTimer = window.setTimeout(() => {
+    streamRenderTimer = null;
+    messages.value.forEach((message) => {
+      if (message.streaming) {
+        message.renderedContent = prepareStreamingMarkdown(message.content || "");
+      }
+    });
+  }, 90);
+}
+
+let scrollScheduled = false;
+function scheduleScrollToBottom() {
+  if (scrollScheduled || !messageListRef.value) return;
+  scrollScheduled = true;
+  requestAnimationFrame(() => {
+    scrollScheduled = false;
+    if (messageListRef.value) messageListRef.value.scrollTop = messageListRef.value.scrollHeight;
+  });
 }
 
 function stopGeneration() {
@@ -621,9 +679,12 @@ async function runStreamTurn(text) {
       await scrollMessagesToBottom();
     } else if (eventName === "delta") {
       const target = ensureLiveMessage();
+      const wasEmpty = !target.content;
       target.content += data.text || "";
+      if (wasEmpty) target.renderedContent = prepareStreamingMarkdown(target.content);
       streamingStarted.value = true;
-      await scrollMessagesToBottom();
+      scheduleStreamRender();
+      scheduleScrollToBottom();
     } else if (eventName === "message") {
       const message = data.message;
       if (!message || message.role === "user") return;
@@ -680,7 +741,8 @@ function revealTextProgressively(fullText) {
       }
       const size = remaining > 400 ? 6 + Math.floor(Math.random() * 5) : 2 + Math.floor(Math.random() * 4);
       target.content = fullText.slice(0, target.content.length + size);
-      scrollMessagesToBottom();
+      scheduleStreamRender();
+      scheduleScrollToBottom();
       setTimeout(step, remaining > 400 ? 14 : 22);
     };
     step();
@@ -745,8 +807,8 @@ function strategyTagType(value) {
 }
 
 function answerHtml(message) {
-  const html = renderMarkdown(message.content || "");
-  return message.streaming ? `${html}<span class="gk-cursor"></span>` : html;
+  const source = message.streaming ? message.renderedContent || "" : message.content || "";
+  return renderMarkdown(source);
 }
 
 function isLongAnswer(message) {
@@ -754,7 +816,7 @@ function isLongAnswer(message) {
 }
 
 function isCollapsedAnswer(message) {
-  return isLongAnswer(message) && !expandedAnswerIds.value.has(message.id);
+  return isLongAnswer(message) && !message.streaming && !expandedAnswerIds.value.has(message.id);
 }
 
 function expandAnswer(message) {
@@ -1097,7 +1159,8 @@ onMounted(async () => {
                     </div>
                     <div v-for="(msg, mi) in group.assistant" :key="`m-${gi}-${mi}`" class="xz-answer">
                       <div :class="['gk-answer__body', { 'is-collapsed': isCollapsedAnswer(msg) }]">
-                        <div v-if="msg.content" class="gk-answer__content" v-html="answerHtml(msg)"></div>
+                        <div v-if="msg.content || msg.streaming" class="gk-answer__content" v-html="answerHtml(msg)"></div>
+                        <span v-if="msg.streaming" class="gk-cursor"></span>
                       </div>
                       <button v-if="isLongAnswer(msg) && !msg.streaming" type="button" class="xz-answer__more" @click="expandAnswer(msg)">
                         {{ isCollapsedAnswer(msg) ? "查看更多" : "收起" }}

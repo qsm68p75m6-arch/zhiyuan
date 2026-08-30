@@ -159,6 +159,13 @@ function probabilityText(prob, detail = null) {
   if (value == null) return isExtremelyLowProbability(detail) ? "0%" : "待测";
   return `${value}%`;
 }
+/* 后端对概率为 null 的院校会给出「极低概率/超出模型区间」结论；
+   志愿位只存了数值概率，渲染时按 schoolId 找回后端判定，避免误显示「待测」。 */
+function probabilityDetailOf(slot) {
+  if (!slot?.schoolId) return null;
+  const matched = schools.value.find((x) => x.id === slot.schoolId);
+  return matched ? matched.probability : null;
+}
 function compareProbability(a, b) {
   const pa = normalizeProbability(a);
   const pb = normalizeProbability(b);
@@ -399,7 +406,7 @@ async function exportSheet() {
   }
   const header = ["序号", "院校名称", "录取概率", "策略", "专业", "服从调剂"];
   const rows = slots.value.map((s, i) =>
-    s ? [i + 1, s.schoolName, probabilityText(s.prob), segmentOfIndex(i).label, (s.majorNames || []).join("、"), s.adjust ? "是" : "否"] : null
+    s ? [i + 1, s.schoolName, probabilityText(s.prob, probabilityDetailOf(s)), segmentOfIndex(i).label, (s.majorNames || []).join("、"), s.adjust ? "是" : "否"] : null
   ).filter(Boolean);
   const text = [header, ...rows].map((r) => r.join("\t")).join("\n");
   try {
@@ -672,7 +679,7 @@ defineExpose({ smartSort });
                 {{ r.slot.schoolName }}
               </td>
               <td>
-                <span class="mnz-table__prob" :class="segmentOfIndex(r.idx - 1).key"><em>录取率</em> {{ probabilityText(r.slot.prob) }}</span>
+                <span class="mnz-table__prob" :class="segmentOfIndex(r.idx - 1).key"><em>录取率</em> {{ probabilityText(r.slot.prob, probabilityDetailOf(r.slot)) }}</span>
               </td>
               <td class="mnz-table__majors">{{ (r.slot.majorNames || []).join("、") || "—" }}</td>
               <td>{{ r.slot.adjust ? "是" : "否" }}</td>
@@ -747,7 +754,7 @@ defineExpose({ smartSort });
 
               <span class="mnz-vrow__prob" :class="seg.key">
                 <em>录取率</em>
-                {{ probabilityText(slots[seg.range[0] + n - 1].prob) }}
+                {{ probabilityText(slots[seg.range[0] + n - 1].prob, probabilityDetailOf(slots[seg.range[0] + n - 1])) }}
               </span>
 
               <span class="mnz-vrow__ops">
